@@ -87,7 +87,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['email'] = user.email
+        token['name'] = user.name
         token['created_date'] = user.created_date.strftime('%d.%m.%Y %H:%M:%S')
         return token
 
