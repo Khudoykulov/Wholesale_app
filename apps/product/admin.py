@@ -17,7 +17,7 @@ from apps.product.models import (
 
 @admin.register(Category)
 class CategoryAdmin(TranslationAdmin):
-    list_display = ('id', 'name', 'created_date')
+    list_display = ('id', 'parent', 'name', 'created_date')
     date_hierarchy = 'created_date'
     search_fields = ('name',)
 
@@ -45,6 +45,7 @@ class ProductAdmin(TranslationAdmin):
     date_hierarchy = 'created_date'
     search_fields = ('name', 'category__name')
     list_filter = ('category',)
+    autocomplete_fields = ('category',)
 
 
 @admin.register(Trade)

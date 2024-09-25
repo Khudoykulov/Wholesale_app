@@ -5,25 +5,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.utils.translation import gettext_lazy as _
 
 
-# class UserManager(BaseUserManager):
-#     def create_user(self, name, password=None, **extra_fields):
-#         if not name:
-#             raise ValueError('Users must have a name')
-#         user = self.model(name=name ** extra_fields)
-#         user.set_password(password)
-#         user.save(using=self._db)
-#         return user
-#
-#     def create_superuser(self, name, password, **extra_fields):
-#         if not password:
-#             raise ValueError('Superusers must have a password')
-#         user = self.create_user(name, password, **extra_fields)
-#         user.is_staff = True
-#         user.is_superuser = True
-#         user.is_active = True
-#         user.save(using=self._db)
-#         return user
-
 class UserManager(BaseUserManager):
     def create_user(self, phone, name, password=None, **extra_fields):
         if not phone:

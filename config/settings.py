@@ -56,10 +56,11 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'config.middlewares.ActivateLanguageMiddleware'
+    'config.middlewares.ActivateLanguageMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -189,6 +190,7 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    # 'https://uzum.uz', namunaviy urls
 ]
 
 CORS_ALLOW_METHODS = [
