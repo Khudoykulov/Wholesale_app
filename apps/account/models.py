@@ -45,6 +45,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.name
 
 
+class UserLocation(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='location')
+    latitude = models.CharField(max_length=100)
+    longitude = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Location of {self.user}: ({self.latitude}, {self.longitude})"
+
+
 class UserToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     token = models.PositiveIntegerField()

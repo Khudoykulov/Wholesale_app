@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from .utils import CreateViewSetMixin
 from .models import (
     Category,
@@ -71,6 +72,9 @@ class TagViewSet(viewsets.ModelViewSet):
 
 class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     queryset = Product.objects.all()
+    model = Product
+    # parser_classes = (MultiPartParser, FormParser)
+
     serializer_class = ProductSerializer
     serializer_post_class = ProductPostSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -82,8 +86,10 @@ class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
+    parser_classes = (MultiPartParser, FormParser)
+
     serializer_class = ProductImageSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    # permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
         pid = self.kwargs.get('pid')

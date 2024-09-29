@@ -16,7 +16,7 @@ from .views import (
 router = DefaultRouter()
 router.register('categories', CategoryViewSet)
 router.register('tags', TagViewSet)
-router.register(r'(?P<pid>[0-9]+)/images', ProductImageViewSet)
+router.register('images', ProductImageViewSet)
 router.register('trades', TradeViewSet)
 router.register('wishlists', WishlistViewSet)
 router.register('likes', LikeViewSet)

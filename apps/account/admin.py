@@ -8,12 +8,12 @@ from .forms import UserCreationForm, UserChangeForm
 class UserAdmin(BaseUserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
-    list_display = ('id', 'phone', 'name', 'is_superuser', 'is_staff', 'is_active', 'created_date')
+    list_display = ('id', 'phone', 'name', 'location__latitude', 'location__longitude', 'is_superuser', 'is_staff', 'is_active', 'created_date')
     readonly_fields = ('last_login', 'modified_date', 'created_date')
     list_filter = ('is_superuser', 'is_staff', 'is_active')
     date_hierarchy = 'created_date'
     fieldsets = (
-        (None, {'fields': ('name', 'phone', 'password', 'avatar')}),
+        (None, {'fields': ('name', 'phone', 'password', 'avatar',)}),
         (_('Permissions'), {'fields': ('is_superuser', 'is_staff', 'is_active', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'modified_date', 'created_date')}),
     )

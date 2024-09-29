@@ -1,3 +1,4 @@
+from itertools import product
 from typing import List, Dict
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -48,20 +49,17 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
         extra_kwargs = {'image': {'required': False}}
 
-    def create(self, validated_data):
-        pid = self.context['pid']
-        validated_data['product_id'] = pid
-        return super().create(validated_data)
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True, read_only=True)
+    # images = ProductImageSerializer(many=True, read_only=True)
     category = MiniCategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'views', 'sold_count', 'images', 'tags',
+        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'views', 'sold_count', 'image_urls',
+                  'tags',
                   'average_rank', 'get_quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
@@ -78,22 +76,16 @@ class MiniProductSerializer(serializers.ModelSerializer):
 
 
 class ProductPostSerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True, required=False)
+    # images = ProductImageSerializer(many=True, required=False)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'images', 'tags']
+        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'image_urls', 'tags']
 
     def create(self, validated_data):
-        images = validated_data.pop('images', [])
         obj = super().create(validated_data)
-        for image in images:
-            ProductImage.objects.create(product=obj, image=image['image'])
+        obj.save()
         return obj
-
-    def update(self, instance, validated_data):
-        images = validated_data.pop('images', [])
-        return super().update(instance, validated_data)
 
 
 class TradeSerializer(serializers.ModelSerializer):

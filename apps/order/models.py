@@ -30,7 +30,7 @@ class CartItem(models.Model):
         return f'{self.product.name}'
 
     @property
-    def get_amount(self):
+    def get_amount(self) -> float:
         return (float(self.product.price) * ((self.product.discount or 1) / 100)) * self.quantity
 
 

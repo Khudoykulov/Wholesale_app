@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
 )
-
+from rest_framework.permissions import IsAuthenticated
 from .tasks import ecommerce_send_email
 from apps.account.models import User, UserToken
 from apps.account.serializers import (
@@ -18,6 +18,18 @@ from apps.account.serializers import (
     UserProfileSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
+from .models import UserLocation
+from .serializers import UserLocationSerializer
+
+
+class UserLocationUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = UserLocation.objects.all()
+    serializer_class = UserLocationSerializer
+    permission_classes = [IsAuthenticated]  # Faqat ro'yxatdan o'tgan foydalanuvchilarga ruxsat
+
+    def get_object(self):
+        # Faqat hozirgi foydalanuvchining lokatsiyasi ustida ishlash uchun
+        return self.request.user.location
 
 
 class UserRegisterView(generics.GenericAPIView):
@@ -29,78 +41,16 @@ class UserRegisterView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token = UserToken.objects.create(user=user)
-        ecommerce_send_email.apply_async(("Activation Token Code", str(token.token), [user.email]), )
+        ecommerce_send_email.apply_async(("Activation Token Code", str(token.token), [user.phone]), )
         data = {
             'success': True,
-            'detail': 'Activation Token Code has been sent to your email.',
+            'detail': 'Activation Token Code has been sent to your phone.',
         }
         return Response(data, status=status.HTTP_201_CREATED)
 
 
-# class SendEmailView(generics.GenericAPIView):
-#     serializer_class = SendEmailSerializer
-#
-#     def post(self, request):
-#         serializer = self.serializer_class(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         email = request.data['email']
-#         user = get_object_or_404(User, email=email)
-#         token = UserToken.objects.create(user=user)
-#         ecommerce_send_email.apply_async(("Activation Token Code", str(token.token), [user.email]), )
-#         data = {
-#             'success': True,
-#             'detail': 'Activation Token Code has been sent to your email.',
-#         }
-#         return Response(data, status=status.HTTP_200_OK)
-
-
-# class VerifyEmailView(generics.GenericAPIView):
-#     serializer_class = VerifyEmailSerializer
-#
-#     def post(self, request):
-#         serializer = self.serializer_class(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         email = request.data['email']
-#         user = get_object_or_404(User, email=email)
-#         refresh = RefreshToken.for_user(user)
-#         obtain_tokens = {
-#             'refresh': str(refresh),
-#             'access': str(refresh.access_token),
-#         }
-#         return Response(obtain_tokens, status=status.HTTP_200_OK)
-
-
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-
-
-# class ChangePasswordView(generics.GenericAPIView):
-#     serializer_class = ChangePasswordSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#     def post(self, request):
-#         serializer = self.serializer_class(data=request.data, context={'request': request})
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         data = {
-#             'success': True,
-#             'detail': 'Your password has been changed.',
-#         }
-#         return Response(data, status=status.HTTP_200_OK)
-
-
-# class ResetPasswordView(generics.GenericAPIView):
-#     serializer_class = ResetPasswordSerializer
-#
-#     def post(self, request):
-#         serializer = self.serializer_class(data=request.data, context={'request': request})
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         data = {
-#             'success': True,
-#             'detail': 'Your password has been reset.',
-#         }
-#         return Response(data, status=status.HTTP_200_OK)
 
 
 class UserProfileRUDView(generics.RetrieveUpdateDestroyAPIView):
