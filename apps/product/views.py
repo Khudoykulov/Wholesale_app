@@ -13,7 +13,7 @@ from .models import (
     Trade,
     Wishlist,
     Like,
-    Comment, Rank,
+    Comment, Rank, CommentImage,
 )
 from .serializers import (
     CategorySerializer,
@@ -87,8 +87,8 @@ class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     parser_classes = (MultiPartParser, FormParser)
-
     serializer_class = ProductImageSerializer
+
     # permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
@@ -162,6 +162,13 @@ class RankViewSet(viewsets.ModelViewSet):
         ctx = super().get_serializer_context()
         ctx['pid'] = self.kwargs.get('pid')
         return ctx
+
+
+class CommentImageViewSet(viewsets.ModelViewSet):
+    queryset = CommentImage.objects.all()
+    parser_classes = (MultiPartParser, FormParser)
+    serializer_class = CommentImageSerializer
+    # permission_classes = [IsAdminOrReadOnly]
 
 
 class CommentViewSet(viewsets.ModelViewSet):

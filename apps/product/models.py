@@ -133,11 +133,12 @@ class Comment(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     comment = models.TextField()
+    comment_image_url  = models.CharField()
     top_level_comment_id = models.PositiveSmallIntegerField(null=True, blank=True, editable=False)
     created_date = models.DateField(auto_now_add=True)
 
-    def __str__(self):
-        return f'{self.product.name} (pid: {self.product.id} -> cid: {self.id})'
+    # def __str__(self):
+    #     return f'{self.product} (pid: {self.product.id} -> cid: {self.id})'
 
     @property
     def tree(self):
@@ -145,8 +146,10 @@ class Comment(models.Model):
 
 
 class CommentImage(models.Model):
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='comment/')
+
+    def __str__(self):
+        return self.image.url
 
 
 def comment_post_save(sender, instance, created, **kwargs):

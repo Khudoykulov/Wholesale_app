@@ -11,12 +11,14 @@ from .views import (
     LikeViewSet,
     RankViewSet,
     CommentViewSet,
+    CommentImageViewSet
 )
 
 router = DefaultRouter()
 router.register('categories', CategoryViewSet)
 router.register('tags', TagViewSet)
 router.register('images', ProductImageViewSet)
+router.register('comment/images', CommentImageViewSet)
 router.register('trades', TradeViewSet)
 router.register('wishlists', WishlistViewSet)
 router.register('likes', LikeViewSet)

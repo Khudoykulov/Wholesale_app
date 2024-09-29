@@ -74,14 +74,13 @@ class RankAdmin(admin.ModelAdmin):
     list_filter = ('rank',)
 
 
-class CommentImageInlineAdmin(admin.TabularInline):
-    model = CommentImage
-    extra = 0
+@admin.register(CommentImage)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'image')
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    inlines = (CommentImageInlineAdmin,)
     list_display = ('id', 'product', 'user', 'parent', 'top_level_comment_id', 'created_date')
     date_hierarchy = 'created_date'
     search_fields = ('product__name', 'user__name', 'parent__name')
