@@ -10,12 +10,8 @@ from .tasks import ecommerce_send_email
 from apps.account.models import User, UserToken
 from apps.account.serializers import (
     UserRegisterSerializer,
-    # SendEmailSerializer,
-    # VerifyEmailSerializer,
-    CustomTokenObtainPairSerializer,
-    # ChangePasswordSerializer,
-    # ResetPasswordSerializer,
     UserProfileSerializer,
+    CustomTokenObtainPairSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
 from .models import UserLocation

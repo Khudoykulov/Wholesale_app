@@ -28,7 +28,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'order', 'children']
+        fields = ['id', 'name','image','parent', 'children']
 
 
 class MiniCategorySerializer(serializers.ModelSerializer):

@@ -43,6 +43,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (SearchFilter,)
     search_fields = ['name']
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
         return Category.objects.filter(parent__isnull=True)
