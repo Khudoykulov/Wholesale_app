@@ -60,3 +60,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'phone', 'avatar', 'is_active', 'is_superuser', 'is_staff', 'modified_date',
             'created_date')
+
+
+class SuperUserCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('phone', 'name', 'password')
+
+    def create(self, validated_data):
+        validated_data['is_superuser'] = True
+        validated_data['is_staff'] = True
+        validated_data['is_active'] = True
+        user = User.objects.create_superuser(**validated_data)
+        return user
+

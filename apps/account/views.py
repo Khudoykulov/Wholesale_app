@@ -1,7 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, permissions, viewsets
-from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import SuperUserCreateSerializer
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
 )
@@ -16,6 +19,7 @@ from apps.account.serializers import (
 from .permissions import IsOwnerOrReadOnly
 from .models import UserLocation
 from .serializers import UserLocationSerializer
+from ..product.permissions import IsAdminOrReadOnly
 
 
 class UserLocationUpdateAPIView(generics.RetrieveUpdateAPIView):
@@ -63,3 +67,15 @@ class UserProfileRUDView(generics.RetrieveUpdateDestroyAPIView):
             'detail': 'Your account has been deactivated.',
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class SuperUserCreateView(APIView):
+    permission_classes = [IsAdminOrReadOnly]
+    serializer_class = SuperUserCreateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = SuperUserCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({"detail": "Superuser  create success full"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

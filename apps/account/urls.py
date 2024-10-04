@@ -25,6 +25,7 @@ from .views import (
     UserRegisterView,
     LoginView,
     UserLocationUpdateAPIView,
+    SuperUserCreateView
 )
 
 router = DefaultRouter()
@@ -33,9 +34,6 @@ urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('update-location/', UserLocationUpdateAPIView.as_view(), name='update-location'),
+    path('superuser/create/', SuperUserCreateView.as_view(), name='superuser-create'),
 
 ]
-
-
-
-
