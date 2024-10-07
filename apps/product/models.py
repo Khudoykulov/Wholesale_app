@@ -9,7 +9,7 @@ from apps.account.models import User
 class Category(models.Model):
     name = models.CharField(max_length=100)
     parent = models.ForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.SET_NULL)
-    image = models.ImageField(upload_to='categories/')
+    image = models.ImageField(upload_to='categories/', null=True, blank=True)
     created_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
