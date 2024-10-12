@@ -18,6 +18,7 @@ from ..account.serializers import UserProfileSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    parent = serializers.CharField(required=False, allow_blank=True)
     children = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.ListSerializer(child=serializers.CharField()))
@@ -28,7 +29,19 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'name','image','parent', 'children']
+        fields = ['id', 'name', 'image', 'parent', 'children']
+
+    def create(self, validated_data):
+        parent_id = validated_data.pop('parent', None)
+        parent = None
+        if parent_id:
+            try:
+                parent = Category.objects.get(id=int(parent_id))
+            except (Category.DoesNotExist, ValueError):
+                raise serializers.ValidationError({"parent": "Parent category not found or invalid ID"})
+        category = Category.objects.create(parent=parent, **validated_data)
+        return category
+
 
 
 class MiniCategorySerializer(serializers.ModelSerializer):
@@ -48,7 +61,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = ['id', 'image']
         extra_kwargs = {'image': {'required': False}}
-
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -175,7 +187,6 @@ class CommentImageSerializer(serializers.ModelSerializer):
 
 
 class MiniCommentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Comment
         fields = ['id', 'parent', 'user', 'comment', 'comment_image_url', 'created_date']
@@ -192,7 +203,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'parent', 'user', 'comment', 'comment_image_url', 'top_level_comment_id', 'tree', 'created_date']
+        fields = ['id', 'parent', 'user', 'comment', 'comment_image_url', 'top_level_comment_id', 'tree',
+                  'created_date']
         read_only_fields = ['tree']
 
     def create(self, validated_data):
