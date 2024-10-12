@@ -40,7 +40,7 @@ from .permissions import (
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    # permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = (SearchFilter,)
     search_fields = ['name']
     parser_classes = (MultiPartParser, FormParser)
