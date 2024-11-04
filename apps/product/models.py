@@ -95,12 +95,16 @@ class Trade(models.Model):
     def __str__(self):
         return self.product.name
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        incomes = Trade.objects.filter(product_id=self.product_id, action=1).count()
-        outcomes = Trade.objects.filter(product_id=self.product_id, action=2).count()
-        if outcomes > incomes:
-            raise ValidationError(_("Outcomes cannot be greater than incomes"))
-        super().save(force_insert=False, force_update=False, using=None, update_fields=None)
+    # def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    #     incomes = Trade.objects.filter(product_id=self.product_id, action=1).count()
+    #     outcomes = Trade.objects.filter(product_id=self.product_id, action=2).count()
+    #     print(incomes)
+    #     print(outcomes)
+    #     if outcomes > incomes:
+    #         raise ValidationError(_("Outcomes cannot be greater than incomes"))
+    #     super().save(force_insert=False, force_update=False, using=None, update_fields=None)
+
+
 
 
 class Wishlist(models.Model):

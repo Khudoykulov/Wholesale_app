@@ -1,5 +1,7 @@
 from itertools import product
 from typing import List, Dict
+
+from django.template.context_processors import request
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from .models import (
@@ -116,6 +118,36 @@ class TradePostSerializer(serializers.ModelSerializer):
         model = Trade
         fields = ['id', 'product', 'user', 'action', 'quantity', 'description', 'created_date']
         read_only_fields = ['user']
+
+    def validate(self, data):
+        product = data.get('product')
+        user = self.context['request'].user
+        action = data.get('action')
+        quantity = data.get('quantity', 0)
+
+        # 1. Foydalanuvchi va mahsulot foydalanuvchisini solishtirish
+        # if product and user and product.user != user:
+        #     print('qwwwwwwwwwwwwwwwwwwwwwwww')
+        #     raise serializers.ValidationError("You can only create trades for your own products.")
+        # print(product.user)
+        print(data)
+        print(user)
+        # 2. Agar action Outcome bo'lsa, mahsulotning mavjud miqdorini tekshirish
+        if action == 2:  # Outcome
+            total_income_quantity = sum(
+                trade.quantity for trade in product.trades.filter(action=1)
+            )
+            total_outcome_quantity = sum(
+                trade.quantity for trade in product.trades.filter(action=2)
+            )
+            available_quantity = total_income_quantity - total_outcome_quantity
+
+            if quantity > available_quantity:
+                raise serializers.ValidationError(
+                    f"Insufficient product quantity for this outcome action. Available quantity: {available_quantity}"
+                )
+
+        return data
 
     def create(self, validated_data):
         user = self.context['request'].user

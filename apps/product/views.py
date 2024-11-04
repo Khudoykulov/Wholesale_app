@@ -92,17 +92,21 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 
     # permission_classes = [IsAdminOrReadOnly]
 
-    def get_queryset(self):
-        pid = self.kwargs.get('pid')
-        if pid:
-            return ProductImage.objects.filter(product_id=pid)
-        return ProductImage.objects.none()
-
     def get_serializer_context(self):
         pid = self.kwargs.get('pid')
         ctx = super().get_serializer_context()
         ctx['pid'] = pid
         return ctx
+
+
+class BestSellingProductsAPIView(generics.ListAPIView):
+    queryset = Product.objects.order_by('-sold_count')  # Ko'p sotilganlarni kamayish tartibida /
+    serializer_class = ProductSerializer
+
+
+class NewlyAddedProductsAPIView(generics.ListAPIView):
+    queryset = Product.objects.order_by('-created_date')  # Yangi qo‘shilganlarni kamayish tartibida
+    serializer_class = ProductSerializer
 
 
 class TradeViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
