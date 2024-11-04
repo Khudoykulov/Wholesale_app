@@ -1,7 +1,12 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from apps.order.models import Order, CartItem, Promo, OrderItem
+from apps.order.models import (
+    Order,
+    # CartItem,
+    Promo,
+    OrderItem
+)
 from apps.product.serializers import ProductSerializer
 
 
@@ -9,7 +14,7 @@ class PromoSerializer(serializers.Serializer):
     name = serializers.CharField()
 
     def validate(self, attrs):
-        user = self.context['request'].user
+        # user = self.context['request'].user
         name = attrs.get('name')
         if name is None:
             raise ValidationError({'detail': "Name is required"})
@@ -18,38 +23,38 @@ class PromoSerializer(serializers.Serializer):
             raise ValidationError({'detail': "Promo does not exist"})
         if promo.last().is_expired:
             raise ValidationError({'detail': "Promo is expired"})
-        if user in promo.last().members.all():
-            return ValidationError({'detail': "Promo is already used"})
+        # if user in promo.last().members.all():
+        #     return ValidationError({'detail': "Promo is already used"})
         return attrs
 
 
-class CartItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
-        read_only_fields = ['user', 'created_date']
-        extra_kwargs = {
-            'product': {'required': True},
-            'quantity': {'required': True},
-        }
-
-
-class CartItemPostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
-        read_only_fields = ['user', 'created_date']
-        extra_kwargs = {
-            'product': {'required': True},
-            'quantity': {'required': True},
-        }
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        validated_data['user_id'] = user.id
-        return super().create(validated_data)
+# class CartItemSerializer(serializers.ModelSerializer):
+#     product = ProductSerializer(read_only=True)
+#
+#     class Meta:
+#         model = CartItem
+#         fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
+#         read_only_fields = ['user', 'created_date']
+#         extra_kwargs = {
+#             'product': {'required': True},
+#             'quantity': {'required': True},
+#         }
+#
+#
+# class CartItemPostSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CartItem
+#         fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
+#         read_only_fields = ['user', 'created_date']
+#         extra_kwargs = {
+#             'product': {'required': True},
+#             'quantity': {'required': True},
+#         }
+#
+#     def create(self, validated_data):
+#         user = self.context['request'].user
+#         validated_data['user_id'] = user.id
+#         return super().create(validated_data)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
