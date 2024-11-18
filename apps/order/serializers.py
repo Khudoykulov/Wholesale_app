@@ -12,48 +12,74 @@ class PromoSerializer(serializers.Serializer):
     name = serializers.CharField()
 
     def validate(self, attrs):
-        user = self.context['request'].user
+        print(self.context)
+        user = self.context.get('user')
         name = attrs.get('name')
         if name is None:
             raise ValidationError({'detail': "Name is required"})
         promo = Promo.objects.filter(name=name)
         if not promo.exists():
             raise ValidationError({'detail': "Promo does not exist"})
-        if promo.lasat().is_expired:
+        if promo.last().is_expired:
             raise ValidationError({'detail': "Promo is expired"})
         if user in promo.last().members.all():
             return ValidationError({'detail': "Promo is already used"})
         return attrs
-#
-#
-# class CartItemSerializer(serializers.ModelSerializer):
-#     product = ProductSerializer(read_only=True)
+
+
+class PromoPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Promo
+        fields = ['id', 'name', 'user', 'description', 'discount', 'min_price', 'expire_date', 'is_expired',
+                  'created_date']
+        read_only_fields = ['id', 'created_date', 'is_expired']
+
+    def validate(self, attrs):
+        # Foydalanuvchi promo yaratganida chegirma va minimal narxni tekshirish
+        discount = attrs.get('discount', 0)
+        min_price = attrs.get('min_price', 0)
+
+        if discount <= 0 or discount > 100:
+            raise serializers.ValidationError({'discount': "Chegirma 1 dan 100 gacha bo'lishi kerak."})
+        if min_price < 100.00:
+            raise serializers.ValidationError({'min_price': "Minimal narx kamida 100 bo'lishi kerak."})
+
+        return attrs
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
+        read_only_fields = ['user', 'created_date']
+        extra_kwargs = {
+            'product': {'required': True},
+            'quantity': {'required': True},
+        }
+
+
+class CartItemPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
+        read_only_fields = ['user', 'created_date']
+        extra_kwargs = {
+            'product': {'required': True},
+            'quantity': {'required': True},
+        }
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['is']
+        validated_data['user_id'] = user.id
+        return super().create(validated_data)
+
+# class OrderSerializer(serializers.ModelSerializer):
+#     items = OrderItemSerializer(many=True, read_only=True)
 #
 #     class Meta:
-#         model = CartItem
-#         fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
-#         read_only_fields = ['user', 'created_date']
-#         extra_kwargs = {
-#             'product': {'required': True},
-#             'quantity': {'required': True},
-#         }
-#
-# class CartItemPostSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = CartItem
-#         fields = ['id', 'product', 'user', 'quantity', 'get_amount', 'created_date']
-#         read_only_fields = ['user', 'created_date']
-#         extra_kwargs = {
-#             'product': {'required': True},
-#             'quantity': {'required': True},
-#         }
-#
-#     def create(self, validated_data):
-#         user = self.context['request'].user
-#         validated_data['user_id'] = user.id
-#         return super().create(validated_data)
-#
 #
 # class OrderItemSerializer(serializers.ModelSerializer):
 #     product = ProductSerializer(read_only=True)
@@ -63,10 +89,6 @@ class PromoSerializer(serializers.Serializer):
 #         fields = ['id', 'product', 'quantity', 'unit_price', 'discount', 'amount']
 #
 #
-# class OrderSerializer(serializers.ModelSerializer):
-#     items = OrderItemSerializer(many=True, read_only=True)
-#
-#     class Meta:
 #         model = Order
 #         fields = ['id', 'user', 'items', 'promo', 'amount', 'modified_date', 'created_date']
 #

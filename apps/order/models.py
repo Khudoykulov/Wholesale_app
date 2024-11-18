@@ -30,7 +30,6 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='cart_items')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    is_ordered = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
