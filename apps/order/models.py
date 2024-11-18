@@ -8,7 +8,7 @@ from apps.product.models import Product
 
 from django.utils import timezone
 from django.http import HttpResponse
-from .utils import generate_receipt_pdf  # PDF yaratish funksiyasi
+from apps.order.utils import generate_receipt_pdf  # PDF yaratish funksiyasi
 
 
 class Promo(models.Model):
