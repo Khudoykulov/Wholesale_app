@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+
+from apps.account.models import User
 from apps.order.models import (
     Order,
     CartItem,
@@ -12,7 +14,6 @@ class PromoSerializer(serializers.Serializer):
     name = serializers.CharField()
 
     def validate(self, attrs):
-        print(self.context)
         user = self.context.get('user')
         name = attrs.get('name')
         if name is None:
@@ -76,57 +77,67 @@ class CartItemPostSerializer(serializers.ModelSerializer):
         validated_data['user_id'] = user.id
         return super().create(validated_data)
 
-# class OrderSerializer(serializers.ModelSerializer):
-#     items = OrderItemSerializer(many=True, read_only=True)
-#
-#     class Meta:
-#
-# class OrderItemSerializer(serializers.ModelSerializer):
-#     product = ProductSerializer(read_only=True)
-#
-#     class Meta:
-#         model = OrderItem
-#         fields = ['id', 'product', 'quantity', 'unit_price', 'discount', 'amount']
-#
-#
-#         model = Order
-#         fields = ['id', 'user', 'items', 'promo', 'amount', 'modified_date', 'created_date']
-#
-#
-# class OrderPostSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = Order
-#         fields = ['id', 'user', 'items', 'promo', 'amount', 'modified_date', 'created_date']
-#         read_only_fields = ['user', 'items', 'amount']
-#
-#
-#     def create(self, validated_data):
-#         user = self.context['request'].user
-#         promo = Promo.objects.filter(name=validated_data['promo'])
-#         amount = 0
-#         cart_items = user.cart_items.all()
-#         order = super().create(validated_data)
-#         for cart_item in cart_items:
-#             amount += cart_item.get_amount
-#             oi = OrderItem.objects.create(
-#                 product_id=cart_item.product.id,
-#                 quantity=cart_item.quantity,
-#                 unit_price=cart_item.product.price,
-#                 discount=cart_item.product.discount,
-#                 amount=cart_item.get_amount,
-#             )
-#             order.add(oi)
-#         if promo.exists():
-#             if promo.last().is_expired:
-#                 raise ValidationError({'detail': "Promo is expired"})
-#             if user in promo.first().members.all():
-#                 return ValidationError({'detail': "Promo is already used"})
-#             if promo.min_price > amount:
-#                 return ValidationError({'detail': f"Must be more expensive than {promo.min_price}"})
-#             amount = amount * (1 - promo.last().discount/100)
-#             promo.members.add(user)
-#         order.amount = amount
-#         order.save()
-#         user.cart_items.all().delete()
-#         return order
+
+class UserSerializersOrder(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    user = UserSerializersOrder(read_only=True)
+    items = CartItemSerializer(many=True, read_only=True)
+    promo = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date', 'created_date',
+                  ]
+
+
+class OrderPostSerializer(serializers.ModelSerializer):
+    items = serializers.PrimaryKeyRelatedField(queryset=CartItem.objects.all(), many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'items', 'promo', 'get_amount', 'modified_date', 'created_date']
+        read_only_fields = ['user', 'items', 'amount']
+
+    def validate(self, attrs):
+        # Promo kod tekshiruvi
+        user = self.context.get('request').user
+        promo_code = attrs.get('promo', None)
+        if promo_code:
+            try:
+                promo = Promo.objects.get(name=promo_code)
+                # Promo kodining muddati o'tganmi
+                if promo.is_expired:
+                    raise ValidationError("Promo kodining muddati o'tgan.")
+                # Buyurtma miqdori minimal narxdan kichikmi?
+                total_amount = sum(item.get_amount for item in attrs['items'])
+                if total_amount < promo.min_price:
+                    raise ValidationError(
+                        f"Promo kodni ishlatish uchun buyurtma miqdori {promo.min_price} dan kam bo'lmasligi kerak.")
+                # Foydalanuvchi promo koddan oldin foydalanganmi?
+                if promo.members.filter(id=user.id).exists():
+                    raise ValidationError("Siz bu promo kodni allaqachon ishlatgansiz.")
+                # Promo kodni qo'shish
+                promo.members.add(user)
+                promo.save()
+            except Promo.DoesNotExist:
+                raise ValidationError("Promo kod mavjud emas.")
+
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get('request')  # `request`ni context orqali olish
+        user = request.user  # Hozirgi foydalanuvchi
+        validated_data['user'] = user  # `user`ni validated_data'ga qo'shamiz
+        items = validated_data.pop('items', [])
+        order = Order.objects.create(**validated_data)
+
+        # `Order`ga `items`ni qo'shamiz
+        for item in items:
+            order.items.add(item)
+
+        return order
