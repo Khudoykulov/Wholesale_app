@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import pre_save
-from apps.account.models import User
+from apps.account.models import User, UserLocation
 from apps.product.models import Product
 
 from django.utils import timezone
@@ -42,6 +42,7 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    location = models.ForeignKey(UserLocation,on_delete=models.SET_NULL,null=True,blank=True,related_name='orders_location')
     items = models.ManyToManyField(CartItem)
     promo = models.CharField(max_length=8, null=True, blank=True)
     is_delivered = models.BooleanField(default=False)

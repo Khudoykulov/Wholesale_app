@@ -2,46 +2,45 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .validators import validate_phone_number
 from rest_framework.validators import UniqueValidator
-
+from rest_framework.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password, password_validators_help_texts
 from apps.account.models import User, UserToken
 from .models import UserLocation
 
 
-class UserLocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserLocation
-        fields = ['latitude', 'longitude']
-
-    def update(self, instance, validated_data):
-        instance.latitude = validated_data.get('latitude', instance.latitude)
-        instance.longitude = validated_data.get('longitude', instance.longitude)
-        instance.save()
-        return instance
-
-
 class UserRegisterSerializer(serializers.ModelSerializer):
-    location = UserLocationSerializer()
     phone = serializers.CharField(
         max_length=12, required=True,
         validators=[
             UniqueValidator(queryset=User.objects.all()), validate_phone_number
         ]
     )
+    password1 = serializers.CharField(write_only=True, validators=[validate_password],
+                                      help_text=password_validators_help_texts)
+    password2 = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        phone = attrs.get('phone')
+        password1 = attrs.get('password1')
+        password2 = attrs.get('password2')
+        if User.objects.filter(phone=phone).exists():
+            raise ValidationError('Email already registered')
+        if password1 != password2:
+            raise ValidationError('Passwords do not match')
+        return attrs
 
     class Meta:
         model = User
-        fields = ['name', 'phone', 'location',]
+        fields = ['name', 'phone', 'password1', 'password2']
 
     def create(self, validated_data):
-        location_data = validated_data.pop('location')
         user = User.objects.create_user(
             name=validated_data['name'],
             phone=validated_data['phone'],
+            password=validated_data['password1']
         )
         user.is_active = True
-        user.set_unusable_password()
         user.save()
-        UserLocation.objects.create(user=user, **location_data)
         return user
 
 
@@ -74,3 +73,14 @@ class SuperUserCreateSerializer(serializers.ModelSerializer):
         user = User.objects.create_superuser(**validated_data)
         return user
 
+
+class UserLocationSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer(read_only=True)
+    class Meta:
+        model = UserLocation
+        fields = ['id', 'user', 'latitude', 'longitude', 'floor', 'apartment', 'image']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['user_id'] = user.id
+        return super().create(validated_data)

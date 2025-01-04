@@ -22,7 +22,7 @@ from .serializers import UserLocationSerializer
 from ..product.permissions import IsAdminOrReadOnly
 
 
-class UserLocationUpdateAPIView(generics.RetrieveUpdateAPIView):
+class UserLocationUpdateAPIView(viewsets.ModelViewSet):
     queryset = UserLocation.objects.all()
     serializer_class = UserLocationSerializer
     permission_classes = [IsAuthenticated]  # Faqat ro'yxatdan o'tgan foydalanuvchilarga ruxsat

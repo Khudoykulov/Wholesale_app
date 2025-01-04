@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from apps.account.models import User
+from apps.account.models import User, UserLocation
+from apps.account.serializers import UserLocationSerializer
 from apps.order.models import (
     Order,
     CartItem,
@@ -81,31 +82,48 @@ class CartItemPostSerializer(serializers.ModelSerializer):
 class UserSerializersOrder(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'phone']
 
 
 class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializersOrder(read_only=True)
     items = CartItemSerializer(many=True, read_only=True)
     promo = serializers.CharField(required=False, allow_blank=True)
+    location = UserLocationSerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date', 'created_date',
+        fields = ['id', 'user', 'location', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date',
+                  'created_date',
                   ]
 
 
 class OrderPostSerializer(serializers.ModelSerializer):
     items = serializers.PrimaryKeyRelatedField(queryset=CartItem.objects.all(), many=True)
+    location = serializers.PrimaryKeyRelatedField(queryset=UserLocation.objects.all(), required=False)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'items', 'promo', 'get_amount', 'modified_date', 'created_date']
+        fields = ['id', 'user', 'items', 'promo', 'location', 'get_amount', 'modified_date', 'created_date']
         read_only_fields = ['user', 'items', 'amount']
 
     def validate(self, attrs):
         # Promo kod tekshiruvi
         user = self.context.get('request').user
+        location_id = self.context['request'].data.get('location')
+
+        if location_id:
+            try:
+                location = UserLocation.objects.get(id=location_id, user=user)
+            except UserLocation.DoesNotExist:
+                raise ValidationError("Berilgan locatsiya mavjud emas yoki sizga tegishli emas.")
+        else:
+            # Agar locatsiya berilmagan bo'lsa, foydalanuvchining oxirgi locatsiyasini olishga urinadi
+            location = UserLocation.objects.filter(user=user).last()
+            if not location:
+                raise ValidationError("Locatsiya topilmadi. Iltimos, locatsiyani qo'shing.")
+
+        attrs['location'] = location
         promo_code = attrs.get('promo', None)
         if promo_code:
             try:
@@ -135,6 +153,14 @@ class OrderPostSerializer(serializers.ModelSerializer):
         validated_data['user'] = user  # `user`ni validated_data'ga qo'shamiz
         items = validated_data.pop('items', [])
         order = Order.objects.create(**validated_data)
+        location = validated_data.pop('location', None)
+        # Agar location bo'lmasa, foydalanuvchining oxirgi locatsiyasini tanlash
+        if not location:
+            location = UserLocation.objects.filter(user=user).last()
+
+        if location:
+            order.location = location
+            order.save()
 
         # `Order`ga `items`ni qo'shamiz
         for item in items:

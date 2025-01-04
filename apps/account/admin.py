@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserToken
+from .models import User, UserToken, UserLocation
 from .forms import UserCreationForm, UserChangeForm
 
 
@@ -18,7 +18,7 @@ class UserAdmin(BaseUserAdmin):
         (_('Important dates'), {'fields': ('last_login', 'modified_date', 'created_date')}),
     )
     add_fieldsets = (
-        (None, {'classes': ('wide',), 'fields': ('name', 'password1', 'password2')}),
+        (None, {'classes': ('wide',), 'fields': ('name', 'phone', 'password1', 'password2')}),
     )
     search_fields = ('name', 'phone')
     ordering = ('name',)
@@ -37,3 +37,11 @@ admin.site.register(User, UserAdmin)
 
 admin.site.index_title = _('Optom_app administration')
 admin.site.site_header = _('Optom_app')
+
+
+@admin.register(UserLocation)
+class UserLocationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'latitude', 'longitude')
+    search_fields = ('user__username', 'latitude', 'longitude')
+    list_filter = ('user',)
+    ordering = ('user',)

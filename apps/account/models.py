@@ -14,11 +14,12 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, name, password=None, **extra_fields):
+    def create_superuser(self, phone, name, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
-
+        if not password:
+            raise ValueError('Superusers must have a password')
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
@@ -46,12 +47,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserLocation(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='location')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='location')
+    image = models.ImageField(null=True, blank=True, upload_to='Location_image/')
     latitude = models.CharField(max_length=100)
     longitude = models.CharField(max_length=100)
+    floor = models.CharField(max_length=123, null=True, blank=True)
+    apartment = models.CharField(max_length=123, null=True, blank=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Location of {self.user}: ({self.latitude}, {self.longitude})"
+        return f"Location of {self.user}: ({self.latitude}, {self.longitude}), ({self.floor}, {self.apartment})"
 
 
 class UserToken(models.Model):
