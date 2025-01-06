@@ -74,7 +74,6 @@ class CartItemPostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        validated_data['is']
         validated_data['user_id'] = user.id
         return super().create(validated_data)
 
