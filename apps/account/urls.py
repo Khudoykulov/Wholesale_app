@@ -26,7 +26,9 @@ from .views import (
     LoginView,
     UserLocationUpdateAPIView,
     SuperUserCreateView,
-    UserProfileAPIView
+    UserProfileAPIView,
+    NewBlockDetailView,
+    NewBlockListCreateView
 )
 
 router = DefaultRouter()
@@ -37,5 +39,7 @@ urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('superuser/create/', SuperUserCreateView.as_view(), name='superuser-create'),
+    path('new-blocks/', NewBlockListCreateView.as_view(), name='new-block-list-create'),
+    path('new-blocks/<int:pk>/', NewBlockDetailView.as_view(), name='new-block-detail'),
 
 ]

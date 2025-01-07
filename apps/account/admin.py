@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserToken, UserLocation
+from .models import User, UserToken, UserLocation, NewBlock
 from .forms import UserCreationForm, UserChangeForm
 
 
@@ -45,3 +45,9 @@ class UserLocationAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'latitude', 'longitude')
     list_filter = ('user',)
     ordering = ('user',)
+
+@admin.register(NewBlock)
+class NewBlockAdmin(admin.ModelAdmin):
+    list_display = ('title', 'created_date')
+    search_fields = ('title', 'description')
+    list_filter = ('created_date',)
