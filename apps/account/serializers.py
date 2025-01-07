@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password, password_validators_help_texts
 from apps.account.models import User, UserToken
 from .models import UserLocation
+from django.contrib.auth import get_user_model
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -76,6 +77,7 @@ class SuperUserCreateSerializer(serializers.ModelSerializer):
 
 class UserLocationSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
+
     class Meta:
         model = UserLocation
         fields = ['id', 'user', 'latitude', 'longitude', 'floor', 'apartment', 'image']
@@ -84,3 +86,9 @@ class UserLocationSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         validated_data['user_id'] = user.id
         return super().create(validated_data)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'phone', 'avatar', ]
