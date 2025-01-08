@@ -80,7 +80,7 @@ class UserLocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserLocation
-        fields = ['id', 'user', 'latitude', 'longitude', 'floor', 'apartment', 'image']
+        fields = ['id', 'user', 'location', 'latitude', 'longitude', 'floor', 'apartment', 'image']
 
     def create(self, validated_data):
         user = self.context['request'].user

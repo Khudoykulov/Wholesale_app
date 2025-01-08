@@ -30,9 +30,9 @@ class UserLocationUpdateAPIView(viewsets.ModelViewSet):
     serializer_class = UserLocationSerializer
     permission_classes = [IsAuthenticated]  # Faqat ro'yxatdan o'tgan foydalanuvchilarga ruxsat
 
-    def get_object(self):
+    def get_queryset(self):
         # Faqat hozirgi foydalanuvchining lokatsiyasi ustida ishlash uchun
-        return self.request.user.location
+        return UserLocation.objects.filter(user=self.request.user)
 
 
 class UserRegisterView(generics.GenericAPIView):

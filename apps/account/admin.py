@@ -41,7 +41,7 @@ admin.site.site_header = _('Optom_app')
 
 @admin.register(UserLocation)
 class UserLocationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'latitude', 'longitude')
+    list_display = ('user', 'location', 'latitude', 'longitude')
     search_fields = ('user__username', 'latitude', 'longitude')
     list_filter = ('user',)
     ordering = ('user',)
