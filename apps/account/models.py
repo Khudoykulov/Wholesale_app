@@ -3,6 +3,7 @@ from django.db.models.signals import pre_save
 from random import randint
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
 
 
 class UserManager(BaseUserManager):
@@ -41,6 +42,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = ['name']
+
+    def clean(self):
+        super().clean()
+        if User.objects.filter(phone=self.phone).exists():
+            raise ValidationError({'phone': "Ushbu telefon raqami allaqachon ro‘yxatdan o‘tgan."})
 
     def __str__(self):
         return self.name

@@ -35,7 +35,7 @@ class ProductImageInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(TranslationAdmin):
-    # inlines = (ProductImageInline,)
+    inlines = (ProductImageInline,)
     list_display = (
         'id', 'name', 'category', 'price', 'discount', 'average_rank', 'get_quantity', 'get_likes_count',
         'is_available',

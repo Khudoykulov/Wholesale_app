@@ -20,6 +20,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
                                       help_text=password_validators_help_texts)
     password2 = serializers.CharField(write_only=True)
 
+    def validate_phone(self, value):
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("Telefon raqami allaqachon ishlatilgan.")
+        return value
+
     def validate(self, attrs):
         phone = attrs.get('phone')
         password1 = attrs.get('password1')

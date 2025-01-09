@@ -74,8 +74,7 @@ class TagViewSet(viewsets.ModelViewSet):
 class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     queryset = Product.objects.all()
     model = Product
-    # parser_classes = (MultiPartParser, FormParser)
-
+    parser_classes = (MultiPartParser, FormParser)
     serializer_class = ProductSerializer
     serializer_post_class = ProductPostSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -89,8 +88,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     parser_classes = (MultiPartParser, FormParser)
     serializer_class = ProductImageSerializer
-
-    # permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_serializer_context(self):
         pid = self.kwargs.get('pid')

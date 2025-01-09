@@ -45,7 +45,6 @@ class CategorySerializer(serializers.ModelSerializer):
         return category
 
 
-
 class MiniCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -64,16 +63,20 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
         extra_kwargs = {'image': {'required': False}}
 
+    def create(self, validated_data):
+        pid = self.context['pid']
+        validated_data['product_id'] = pid
+        return super().create(validated_data)
+
 
 class ProductSerializer(serializers.ModelSerializer):
-    # images = ProductImageSerializer(many=True, read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
     category = MiniCategorySerializer(read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
+    # tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'views', 'sold_count', 'image_urls',
-                  'tags',
+        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'views', 'sold_count', 'images',
                   'average_rank', 'get_quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
@@ -90,15 +93,18 @@ class MiniProductSerializer(serializers.ModelSerializer):
 
 
 class ProductPostSerializer(serializers.ModelSerializer):
-    # images = ProductImageSerializer(many=True, required=False)
+    images = ProductImageSerializer(many=True, required=False)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'image_urls', 'tags']
+        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'images',]
 
     def create(self, validated_data):
+        images = validated_data.pop('images', [])
         obj = super().create(validated_data)
         obj.save()
+        for image in images:
+            ProductImage.objects.create(product=obj, image=image['image'])
         return obj
 
 
