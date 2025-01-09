@@ -61,6 +61,10 @@ class OrderViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        # Agar foydalanuvchi superuser bo'lsa, barcha orderlarni qaytaramiz
+        if self.request.user.is_superuser:
+            return self.queryset
+        # Aks holda faqat o'zining orderlarini qaytaramiz
         return self.queryset.filter(user=self.request.user)
 
     def get_serializer_context(self):
@@ -68,6 +72,17 @@ class OrderViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {"detail": "Buyurtma muvaffaqiyatli o'chirildi."},
+            status=status.HTTP_201_CREATED
+        )
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class OrderPDFView(APIView):
