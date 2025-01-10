@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import (
 )
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
-from .tasks import ecommerce_send_email
+# from .tasks import ecommerce_send_email
 from apps.account.models import User, UserToken
 from apps.account.serializers import (
     UserRegisterSerializer,
@@ -45,7 +45,7 @@ class UserRegisterView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token = UserToken.objects.create(user=user)
-        ecommerce_send_email.apply_async(("Activation Token Code", str(token.token), [user.phone]), )
+        # ecommerce_send_email.apply_async(("Activation Token Code", str(token.token), [user.phone]), )
         data = {
             'success': True,
             'detail': 'Activation Token Code has been sent to your phone.',
