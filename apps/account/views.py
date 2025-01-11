@@ -28,7 +28,7 @@ from ..product.permissions import IsAdminOrReadOnly
 class UserLocationUpdateAPIView(viewsets.ModelViewSet):
     queryset = UserLocation.objects.all()
     serializer_class = UserLocationSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    # parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated]  # Faqat ro'yxatdan o'tgan foydalanuvchilarga ruxsat
 
     def get_queryset(self):

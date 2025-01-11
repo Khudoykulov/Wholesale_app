@@ -54,7 +54,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserLocation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='location')
-    image = models.ImageField(null=True, blank=True, upload_to='Location_image/')
     location = models.CharField(max_length=123, null=True, blank=True)
     latitude = models.CharField(max_length=100)
     longitude = models.CharField(max_length=100)

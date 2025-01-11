@@ -87,7 +87,7 @@ class MiniProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'views', 'sold_count', 'images', 'average_rank',
+        fields = ['id', 'name', 'category', 'description', 'price', 'views', 'sold_count', 'images', 'average_rank',
                   'get_quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
