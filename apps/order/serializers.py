@@ -9,6 +9,7 @@ from apps.order.models import (
     Promo,
 )
 from apps.product.serializers import ProductSerializer
+from drf_spectacular.utils import extend_schema_field
 
 
 class PromoSerializer(serializers.Serializer):
@@ -60,6 +61,10 @@ class CartItemSerializer(serializers.ModelSerializer):
             'product': {'required': True},
             'quantity': {'required': True},
         }
+
+        @extend_schema_field(serializers.FloatField())
+        def get_amount(self, obj) -> float:
+            return float(obj.product.price) * obj.quantity
 
 
 class CartItemPostSerializer(serializers.ModelSerializer):

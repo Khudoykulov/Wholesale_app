@@ -89,11 +89,11 @@ class SuperUserCreateView(APIView):
 class UserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
-
+    serializer_class = UserSerializer
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = self.serializer_class(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(

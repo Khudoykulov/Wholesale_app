@@ -93,7 +93,8 @@ class MiniProductSerializer(serializers.ModelSerializer):
 
 
 class ProductPostSerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True, required=False)
+    # images = ProductImageSerializer(many=True, required=False)
+    images = serializers.ListField(child=serializers.ImageField(), required=False, write_only=True)
 
     class Meta:
         model = Product
@@ -102,11 +103,14 @@ class ProductPostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         images = validated_data.pop('images', [])
         obj = super().create(validated_data)
-        obj.save()
-        for image in images:
-            ProductImage.objects.create(product=obj, image=image['image'])
-        return obj
 
+        # ProductImage obyektlarini yaratish
+        product_images = [ProductImage(product=obj, image=image) for image in images]
+
+        # Barcha ProductImage obyektlarini saqlash
+        ProductImage.objects.bulk_create(product_images)
+
+        return obj
 
 class TradeSerializer(serializers.ModelSerializer):
     product = MiniProductSerializer(read_only=True)
@@ -131,14 +135,6 @@ class TradePostSerializer(serializers.ModelSerializer):
         action = data.get('action')
         quantity = data.get('quantity', 0)
 
-        # 1. Foydalanuvchi va mahsulot foydalanuvchisini solishtirish
-        # if product and user and product.user != user:
-        #     print('qwwwwwwwwwwwwwwwwwwwwwwww')
-        #     raise serializers.ValidationError("You can only create trades for your own products.")
-        # print(product.user)
-        print(data)
-        print(user)
-        # 2. Agar action Outcome bo'lsa, mahsulotning mavjud miqdorini tekshirish
         if action == 2:  # Outcome
             total_income_quantity = sum(
                 trade.quantity for trade in product.trades.filter(action=1)

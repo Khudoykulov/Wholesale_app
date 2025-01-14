@@ -18,14 +18,14 @@ from .views import (
 
 router = DefaultRouter()
 router.register('categories', CategoryViewSet)
-router.register('tags', TagViewSet)
-router.register('images', ProductImageViewSet)
-router.register('comment/images', CommentImageViewSet)
+# router.register('tags', TagViewSet)
+# router.register('images', ProductImageViewSet)
+# router.register('comment/images', CommentImageViewSet)
 router.register('trades', TradeViewSet)
 router.register('wishlists', WishlistViewSet)
 router.register('likes', LikeViewSet)
 router.register('(?P<pid>[0-9]+)/ranks', RankViewSet)
-router.register('(?P<pid>[0-9]+)/comments', CommentViewSet)
+# router.register('(?P<pid>[0-9]+)/comments', CommentViewSet)
 router.register('', ProductViewSet)
 
 urlpatterns = [

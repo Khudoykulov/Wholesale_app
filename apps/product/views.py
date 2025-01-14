@@ -80,13 +80,13 @@ class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     search_fields = ['name']
-    filterset_fields = ['category', 'tags']
+    filterset_fields = ['category',]
     ordering_fields = ['views', 'id', 'sold_count']
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
-    parser_classes = (MultiPartParser, FormParser)
+    # parser_classes = (MultiPartParser, FormParser)<
     serializer_class = ProductImageSerializer
     permission_classes = [IsAdminOrReadOnly]
 
