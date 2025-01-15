@@ -105,6 +105,18 @@ class ProductPostSerializer(serializers.ModelSerializer):
 
         return obj
 
+    def update(self, instance, validated_data):
+        images = validated_data.pop('images', [])
+        obj = super().update(instance, validated_data)
+
+        # Update images if new ones are provided
+        if images:
+            ProductImage.objects.filter(product=obj).delete()  # Optionally, delete old images
+            product_images = [ProductImage(product=obj, image=image) for image in images]
+            ProductImage.objects.bulk_create(product_images)
+
+        return obj
+
 class TradeSerializer(serializers.ModelSerializer):
     product = MiniProductSerializer(read_only=True)
     user = UserProfileSerializer(read_only=True)
