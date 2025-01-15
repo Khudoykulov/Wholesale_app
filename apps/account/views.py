@@ -5,7 +5,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SuperUserCreateSerializer, UserSerializer,UserUpdateSerializer
+from .serializers import SuperUserCreateSerializer, UserSerializer, UserUpdateSerializer, AdviceSerializer
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
 )
@@ -17,10 +17,12 @@ from apps.account.serializers import (
     UserRegisterSerializer,
     UserProfileSerializer,
     CustomTokenObtainPairSerializer,
-    NewBlockSerializer
+    NewBlockSerializer,
+    AdviceSerializer,
+    CallSerializer
 )
 from .permissions import IsOwnerOrReadOnly,IsAdminOrReadOnly
-from .models import UserLocation, NewBlock
+from .models import UserLocation, NewBlock, Advice, Call
 from .serializers import UserLocationSerializer
 from ..product.permissions import IsAdminOrReadOnly
 
@@ -119,3 +121,23 @@ class NewBlockDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = NewBlockSerializer
     permission_classes = [IsAdminOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
+
+class AdviceViewSet(viewsets.ModelViewSet):
+    queryset = Advice.objects.all()
+    permission_classes = [IsAdminOrReadOnly]
+    serializer_class = AdviceSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
+class CallViewSet(viewsets.ModelViewSet):
+    queryset = Call.objects.all()
+    permission_classes = [IsAdminOrReadOnly]
+    serializer_class = CallSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)

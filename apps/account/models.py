@@ -1,7 +1,9 @@
+from celery.utils.log import base_logger
 from django.db import models
 from django.db.models.signals import pre_save
 from random import randint
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.template.defaultfilters import title
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 
@@ -55,8 +57,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 class UserLocation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='location')
     location = models.CharField(max_length=123, null=True, blank=True)
-    latitude = models.CharField(max_length=100)
-    longitude = models.CharField(max_length=100)
+    latitude = models.CharField(max_length=100, null=True, blank=True)
+    longitude = models.CharField(max_length=100, null=True, blank=True)
     floor = models.CharField(max_length=123, null=True, blank=True)
     apartment = models.CharField(max_length=123, null=True, blank=True)
     modified_date = models.DateTimeField(auto_now=True)
@@ -90,3 +92,17 @@ class NewBlock(models.Model):
 
     def __str__(self):
         return self.title
+
+class Advice(models.Model):
+    title = models.CharField(max_length=123)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+class Call(models.Model):
+    phone = models.CharField(max_length=123, null=True, blank=True)
+    url = models.CharField(max_length=123, null=True, blank=True)
+
+    def __str__(self):
+        return self.phone

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserToken, UserLocation, NewBlock
+from .models import User, UserToken, UserLocation, NewBlock, Advice, Call
 from .forms import UserCreationForm, UserChangeForm
 
 
@@ -51,3 +51,13 @@ class NewBlockAdmin(admin.ModelAdmin):
     list_display = ('title', 'created_date')
     search_fields = ('title', 'description')
     list_filter = ('created_date',)
+
+@admin.register(Advice)
+class AdviceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'description')
+    search_fields = ('title',)
+
+@admin.register(Call)
+class AdviceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'phone', 'url')
+    search_fields = ('phone',)

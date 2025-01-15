@@ -5,7 +5,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password, password_validators_help_texts
 from apps.account.models import User, UserToken
-from .models import UserLocation, NewBlock
+from .models import UserLocation, NewBlock, Advice, Call
 from django.contrib.auth import get_user_model
 
 
@@ -109,3 +109,13 @@ class NewBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewBlock
         fields = ['id', 'title', 'description', 'image', 'created_date']
+
+class AdviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Advice
+        fields = ['id', 'title', 'description']
+
+class CallSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Call
+        fields = ['id', 'phone', 'url']
