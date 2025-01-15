@@ -21,7 +21,7 @@ from apps.account.serializers import (
     AdviceSerializer,
     CallSerializer
 )
-from .permissions import IsOwnerOrReadOnly,IsAdminOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 from .models import UserLocation, NewBlock, Advice, Call
 from .serializers import UserLocationSerializer
 from ..product.permissions import IsAdminOrReadOnly
@@ -36,6 +36,11 @@ class UserLocationUpdateAPIView(viewsets.ModelViewSet):
     def get_queryset(self):
         # Faqat hozirgi foydalanuvchining lokatsiyasi ustida ishlash uchun
         return UserLocation.objects.filter(user=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class UserRegisterView(generics.GenericAPIView):
@@ -110,17 +115,20 @@ class UserProfileAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class NewBlockListCreateView(generics.ListCreateAPIView):
     queryset = NewBlock.objects.all()
     serializer_class = NewBlockSerializer
     permission_classes = [IsAdminOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
 
+
 class NewBlockDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = NewBlock.objects.all()
     serializer_class = NewBlockSerializer
     permission_classes = [IsAdminOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
+
 
 class AdviceViewSet(viewsets.ModelViewSet):
     queryset = Advice.objects.all()
@@ -131,6 +139,7 @@ class AdviceViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'deleted': True}, status=status.HTTP_200_OK)
+
 
 class CallViewSet(viewsets.ModelViewSet):
     queryset = Call.objects.all()

@@ -52,6 +52,11 @@ class CartItemViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
         CartItem.objects.all()
         return self.queryset.filter(user=self.request.user)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
 
 class OrderViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     serializer_class = OrderSerializer

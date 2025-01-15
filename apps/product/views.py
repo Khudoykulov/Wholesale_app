@@ -62,6 +62,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
         self.check_object_permissions(self.request, obj)
         return obj
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
@@ -69,6 +74,11 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (SearchFilter,)
     search_fields = ['name']
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
@@ -80,8 +90,13 @@ class ProductViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     search_fields = ['name']
-    filterset_fields = ['category',]
+    filterset_fields = ['category', ]
     ordering_fields = ['views', 'id', 'sold_count']
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):
@@ -95,6 +110,11 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         ctx = super().get_serializer_context()
         ctx['pid'] = pid
         return ctx
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class BestSellingProductsAPIView(generics.ListAPIView):
@@ -117,6 +137,11 @@ class TradeViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     search_fields = ['product__name']
     filterset_fields = ['action', 'product']
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
 
 class WishlistViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     model = Wishlist
@@ -133,6 +158,11 @@ class WishlistViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
             return qs.all()
         return qs.filter(user_id=self.request.user.id)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
 
 class LikeViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     model = Like
@@ -148,6 +178,11 @@ class LikeViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
         if self.request.user.is_superuser:
             return qs.all()
         return qs.filter(user_id=self.request.user.id)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class RankViewSet(viewsets.ModelViewSet):
@@ -166,12 +201,21 @@ class RankViewSet(viewsets.ModelViewSet):
         ctx['pid'] = self.kwargs.get('pid')
         return ctx
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
 
 class CommentImageViewSet(viewsets.ModelViewSet):
     queryset = CommentImage.objects.all()
     parser_classes = (MultiPartParser, FormParser)
     serializer_class = CommentImageSerializer
-    # permission_classes = [IsAdminOrReadOnly]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -200,3 +244,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         obj = get_object_or_404(queryset, **filter_kwargs)
         self.check_object_permissions(self.request, obj)
         return obj
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)

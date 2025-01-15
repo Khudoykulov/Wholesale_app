@@ -18,9 +18,8 @@ from .models import (
 )
 from ..account.serializers import UserProfileSerializer
 
-
 class CategorySerializer(serializers.ModelSerializer):
-    parent = serializers.CharField(required=False, allow_blank=True)
+    parent = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
     children = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.ListSerializer(child=serializers.CharField()))
@@ -34,13 +33,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'parent', 'children']
 
     def create(self, validated_data):
-        parent_id = validated_data.pop('parent', None)
-        parent = None
-        if parent_id:
-            try:
-                parent = Category.objects.get(id=int(parent_id))
-            except (Category.DoesNotExist, ValueError):
-                raise serializers.ValidationError({"parent": "Parent category not found or invalid ID"})
+        parent = validated_data.pop('parent', None)
         category = Category.objects.create(parent=parent, **validated_data)
         return category
 
