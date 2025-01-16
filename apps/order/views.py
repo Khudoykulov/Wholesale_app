@@ -2,6 +2,7 @@ from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 from apps.order.models import (
     Order,
@@ -56,6 +57,16 @@ class CartItemViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'deleted': True}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], url_path='clear-cart')
+    def clear_cart(self, request):
+        user_cart_items = self.get_queryset()
+        deleted_count = user_cart_items.count()
+        user_cart_items.delete()
+        return Response(
+            {'message': f'{deleted_count} ta mahsulot savatchadan o\'chirildi.'},
+            status=status.HTTP_200_OK
+        )
 
 
 class OrderViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
