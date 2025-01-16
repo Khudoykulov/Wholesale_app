@@ -34,7 +34,7 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register('location/', UserLocationUpdateAPIView)
+router.register(r'location', UserLocationUpdateAPIView, basename='location')
 router.register(r'advices', AdviceViewSet, basename='advice')
 router.register(r'call', CallViewSet, basename='call')
 urlpatterns = [
