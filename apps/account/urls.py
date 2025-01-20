@@ -30,13 +30,15 @@ from .views import (
     NewBlockDetailView,
     NewBlockListCreateView,
     AdviceViewSet,
-    CallViewSet
+    CallViewSet,
+    BannerViewSet
 )
 
 router = DefaultRouter()
 router.register(r'location', UserLocationUpdateAPIView, basename='location')
 router.register(r'advices', AdviceViewSet, basename='advice')
 router.register(r'call', CallViewSet, basename='call')
+router.register(r'banners', BannerViewSet, basename='banner')
 urlpatterns = [
     path('', include(router.urls)),
     path('profile/', UserProfileAPIView.as_view(), name='user-profile'),

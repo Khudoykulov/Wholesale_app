@@ -1,14 +1,16 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserToken, UserLocation, NewBlock, Advice, Call
+from .models import User, UserToken, UserLocation, NewBlock, Advice, Call, Banner
 from .forms import UserCreationForm, UserChangeForm
 
 
 class UserAdmin(BaseUserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
-    list_display = ('id', 'phone', 'name', 'location__latitude', 'location__longitude', 'is_superuser', 'is_staff', 'is_active', 'created_date')
+    list_display = (
+    'id', 'phone', 'name', 'location__latitude', 'location__longitude', 'is_superuser', 'is_staff', 'is_active',
+    'created_date')
     readonly_fields = ('last_login', 'modified_date', 'created_date')
     list_filter = ('is_superuser', 'is_staff', 'is_active')
     date_hierarchy = 'created_date'
@@ -46,18 +48,27 @@ class UserLocationAdmin(admin.ModelAdmin):
     list_filter = ('user',)
     ordering = ('user',)
 
+
 @admin.register(NewBlock)
 class NewBlockAdmin(admin.ModelAdmin):
     list_display = ('title', 'created_date')
     search_fields = ('title', 'description')
     list_filter = ('created_date',)
 
+
 @admin.register(Advice)
 class AdviceAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'description')
     search_fields = ('title',)
 
+
 @admin.register(Call)
 class AdviceAdmin(admin.ModelAdmin):
     list_display = ('id', 'phone', 'telegram', 'instagram', 'tiktok', 'facebook')
     search_fields = ('phone',)
+
+
+@admin.register(Banner)
+class BannerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'image']
+    search_fields = ['id']

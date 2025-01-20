@@ -5,14 +5,15 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SuperUserCreateSerializer, UserSerializer, UserUpdateSerializer, AdviceSerializer
+from .serializers import SuperUserCreateSerializer, UserSerializer, UserUpdateSerializer, AdviceSerializer, \
+    BannerSerializer
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
 )
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 # from .tasks import ecommerce_send_email
-from apps.account.models import User, UserToken
+from apps.account.models import User, UserToken, Banner
 from apps.account.serializers import (
     UserRegisterSerializer,
     UserProfileSerializer,
@@ -145,6 +146,18 @@ class CallViewSet(viewsets.ModelViewSet):
     queryset = Call.objects.all()
     permission_classes = [IsAdminOrReadOnly]
     serializer_class = CallSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
+
+class BannerViewSet(viewsets.ModelViewSet):
+    queryset = Banner.objects.all()
+    serializer_class = BannerSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

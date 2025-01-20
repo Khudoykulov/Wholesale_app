@@ -109,3 +109,9 @@ class Call(models.Model):
 
     def __str__(self):
         return self.phone
+
+class Banner(models.Model):
+    image = models.ImageField(upload_to='account/banner_image/')
+
+    def __str__(self):
+        return 'banner'
