@@ -102,7 +102,10 @@ class Advice(models.Model):
 
 class Call(models.Model):
     phone = models.CharField(max_length=123, null=True, blank=True)
-    url = models.CharField(max_length=123, null=True, blank=True)
+    telegram = models.CharField(max_length=123, null=True, blank=True)
+    instagram = models.CharField(max_length=123, null=True, blank=True)
+    tiktok = models.CharField(max_length=123, null=True, blank=True)
+    facebook = models.CharField(max_length=123, null=True, blank=True)
 
     def __str__(self):
         return self.phone

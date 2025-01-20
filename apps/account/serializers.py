@@ -118,4 +118,4 @@ class AdviceSerializer(serializers.ModelSerializer):
 class CallSerializer(serializers.ModelSerializer):
     class Meta:
         model = Call
-        fields = ['id', 'phone', 'url']
+        fields = ['id', 'phone', 'telegram', 'instagram', 'tiktok', 'facebook']

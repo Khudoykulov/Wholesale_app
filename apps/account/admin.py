@@ -59,5 +59,5 @@ class AdviceAdmin(admin.ModelAdmin):
 
 @admin.register(Call)
 class AdviceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'phone', 'url')
+    list_display = ('id', 'phone', 'telegram', 'instagram', 'tiktok', 'facebook')
     search_fields = ('phone',)
