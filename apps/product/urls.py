@@ -6,7 +6,7 @@ from .views import (
     TagViewSet,
     ProductViewSet,
     ProductImageViewSet,
-    TradeViewSet,
+    # TradeViewSet,
     WishlistViewSet,
     LikeViewSet,
     RankViewSet,
@@ -21,7 +21,7 @@ router.register('categories', CategoryViewSet)
 # router.register('tags', TagViewSet)
 # router.register('images', ProductImageViewSet)
 # router.register('comment/images', CommentImageViewSet)
-router.register('trades', TradeViewSet)
+# router.register('trades', TradeViewSet)
 router.register('wishlists', WishlistViewSet)
 router.register('likes', LikeViewSet)
 router.register('(?P<pid>[0-9]+)/ranks', RankViewSet)

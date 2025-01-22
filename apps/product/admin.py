@@ -6,7 +6,7 @@ from apps.product.models import (
     Tag,
     Product,
     ProductImage,
-    Trade,
+    # Trade,
     Wishlist,
     Like,
     Rank,
@@ -37,22 +37,22 @@ class ProductImageInline(admin.TabularInline):
 class ProductAdmin(TranslationAdmin):
     inlines = (ProductImageInline,)
     list_display = (
-        'id', 'name', 'category', 'price', 'discount', 'average_rank', 'get_quantity', 'get_likes_count',
+        'id', 'name', 'category', 'price', 'discount', 'average_rank', 'quantity', 'get_likes_count',
         'is_available',
         'created_date')
     readonly_fields = (
-        'average_rank', 'get_quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date')
+        'average_rank', 'quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date')
     date_hierarchy = 'created_date'
     search_fields = ('name', 'category__name')
     list_filter = ('category',)
     autocomplete_fields = ('category',)
 
 
-@admin.register(Trade)
-class TradeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'quantity', 'created_date')
-    date_hierarchy = 'created_date'
-    search_fields = ('product__name',)
+# @admin.register(Trade)
+# class TradeAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'product', 'quantity', 'created_date')
+#     date_hierarchy = 'created_date'
+#     search_fields = ('product__name',)
 
 
 @admin.register(Wishlist)

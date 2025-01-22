@@ -9,7 +9,7 @@ from .models import (
     Tag,
     Product,
     ProductImage,
-    Trade,
+    # Trade,
     Like,
     Wishlist,
     Rank,
@@ -69,8 +69,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'views', 'sold_count', 'images',
-                  'average_rank', 'get_quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
+        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'discount', 'views', 'sold_count', 'images',
+                  'average_rank', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
 
@@ -80,8 +80,8 @@ class MiniProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'views', 'sold_count', 'images', 'average_rank',
-                  'get_quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
+        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'views', 'sold_count', 'images', 'average_rank',
+                 'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
 
@@ -91,7 +91,7 @@ class ProductPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'discount', 'images',]
+        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'discount', 'images',]
 
     def create(self, validated_data):
         images = validated_data.pop('images', [])
@@ -117,49 +117,49 @@ class ProductPostSerializer(serializers.ModelSerializer):
 
         return obj
 
-class TradeSerializer(serializers.ModelSerializer):
-    product = MiniProductSerializer(read_only=True)
-    user = UserProfileSerializer(read_only=True)
-    action_name = serializers.CharField(read_only=True, source='get_action_display')
+# class TradeSerializer(serializers.ModelSerializer):
+#     product = MiniProductSerializer(read_only=True)
+#     user = UserProfileSerializer(read_only=True)
+#     action_name = serializers.CharField(read_only=True, source='get_action_display')
+#
+#     class Meta:
+#         model = Trade
+#         fields = ['id', 'product', 'user', 'action_name', 'quantity', 'description', 'created_date']
+#         read_only_fields = ['user']
 
-    class Meta:
-        model = Trade
-        fields = ['id', 'product', 'user', 'action_name', 'quantity', 'description', 'created_date']
-        read_only_fields = ['user']
 
-
-class TradePostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Trade
-        fields = ['id', 'product', 'user', 'action', 'quantity', 'description', 'created_date']
-        read_only_fields = ['user']
-
-    def validate(self, data):
-        product = data.get('product')
-        user = self.context['request'].user
-        action = data.get('action')
-        quantity = data.get('quantity', 0)
-
-        if action == 2:  # Outcome
-            total_income_quantity = sum(
-                trade.quantity for trade in product.trades.filter(action=1)
-            )
-            total_outcome_quantity = sum(
-                trade.quantity for trade in product.trades.filter(action=2)
-            )
-            available_quantity = total_income_quantity - total_outcome_quantity
-
-            if quantity > available_quantity:
-                raise serializers.ValidationError(
-                    f"Insufficient product quantity for this outcome action. Available quantity: {available_quantity}"
-                )
-
-        return data
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        validated_data['user_id'] = user.id
-        return super().create(validated_data)
+# class TradePostSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Trade
+#         fields = ['id', 'product', 'user', 'action', 'quantity', 'description', 'created_date']
+#         read_only_fields = ['user']
+#
+#     def validate(self, data):
+#         product = data.get('product')
+#         user = self.context['request'].user
+#         action = data.get('action')
+#         quantity = data.get('quantity', 0)
+#
+#         if action == 2:  # Outcome
+#             total_income_quantity = sum(
+#                 trade.quantity for trade in product.trades.filter(action=1)
+#             )
+#             total_outcome_quantity = sum(
+#                 trade.quantity for trade in product.trades.filter(action=2)
+#             )
+#             available_quantity = total_income_quantity - total_outcome_quantity
+#
+#             if quantity > available_quantity:
+#                 raise serializers.ValidationError(
+#                     f"Insufficient product quantity for this outcome action. Available quantity: {available_quantity}"
+#                 )
+#
+#         return data
+#
+#     def create(self, validated_data):
+#         user = self.context['request'].user
+#         validated_data['user_id'] = user.id
+#         return super().create(validated_data)
 
 
 class WishListSerializer(serializers.ModelSerializer):

@@ -169,5 +169,13 @@ class OrderPostSerializer(serializers.ModelSerializer):
         # `Order`ga `items`ni qo'shamiz
         for item in items:
             order.items.add(item)
+            product = item.product  # `CartItem`dagi `product`ni olish
+            if item.quantity > product.quantity:
+                raise ValidationError(
+                    f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
+                    f"Qoldiq: {product.quantity} ta."
+                )
+            product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
+            product.save()
 
         return order

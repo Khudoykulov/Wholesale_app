@@ -36,6 +36,7 @@ class Product(models.Model):
     views = models.PositiveIntegerField(default=0)
     sold_count = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, blank=True)
+    quantity = models.PositiveIntegerField(default=0)
     modified_date = models.DateField(auto_now=True)
     created_date = models.DateField(auto_now_add=True)
 
@@ -49,11 +50,11 @@ class Product(models.Model):
         except ZeroDivisionError:
             return 0
 
-    @property
-    def get_quantity(self) -> int:
-        incomes = sum(self.trades.filter(action=1).values_list('quantity', flat=True))
-        outcomes = sum(self.trades.filter(action=2).values_list('quantity', flat=True))
-        return incomes - outcomes
+    # @property
+    # def get_quantity(self) -> int:
+    #     incomes = sum(self.trades.filter(action=1).values_list('quantity', flat=True))
+    #     outcomes = sum(self.trades.filter(action=2).values_list('quantity', flat=True))
+    #     return incomes - outcomes
 
     @property
     def get_likes_count(self) -> int:
@@ -80,20 +81,20 @@ class ProductImage(models.Model):
         return self.product.name
 
 
-class Trade(models.Model):
-    ACTION = (
-        (1, _('Income')),
-        (2, _('Outcome')),
-    )
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='trades')
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    action = models.PositiveSmallIntegerField(choices=ACTION, default=1)
-    quantity = models.PositiveIntegerField(default=0)
-    description = models.TextField(null=True)
-    created_date = models.DateField(auto_now_add=True)
-
-    def __str__(self):
-        return self.product.name
+# class Trade(models.Model):
+#     ACTION = (
+#         (1, _('Income')),
+#         (2, _('Outcome')),
+#     )
+#     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='trades')
+#     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+#     action = models.PositiveSmallIntegerField(choices=ACTION, default=1)
+#     quantity = models.PositiveIntegerField(default=0)
+#     description = models.TextField(null=True)
+#     created_date = models.DateField(auto_now_add=True)
+#
+#     def __str__(self):
+#         return self.product.name
 
 
 class Wishlist(models.Model):

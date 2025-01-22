@@ -10,7 +10,7 @@ from .models import (
     Tag,
     Product,
     ProductImage,
-    Trade,
+    # Trade,
     Wishlist,
     Like,
     Comment, Rank, CommentImage,
@@ -21,8 +21,8 @@ from .serializers import (
     ProductSerializer,
     ProductPostSerializer,
     ProductImageSerializer,
-    TradeSerializer,
-    TradePostSerializer,
+    # TradeSerializer,
+    # TradePostSerializer,
     WishListSerializer,
     WishListPostSerializer,
     LikeSerializer,
@@ -127,20 +127,20 @@ class NewlyAddedProductsAPIView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
 
-class TradeViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
-    queryset = Trade.objects.all()
-    model = Trade
-    serializer_class = TradeSerializer
-    serializer_post_class = TradePostSerializer
-    permission_classes = [permissions.IsAdminUser]
-    filter_backends = (SearchFilter, DjangoFilterBackend)
-    search_fields = ['product__name']
-    filterset_fields = ['action', 'product']
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({'deleted': True}, status=status.HTTP_200_OK)
+# class TradeViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
+#     queryset = Trade.objects.all()
+#     model = Trade
+#     serializer_class = TradeSerializer
+#     serializer_post_class = TradePostSerializer
+#     permission_classes = [permissions.IsAdminUser]
+#     filter_backends = (SearchFilter, DjangoFilterBackend)
+#     search_fields = ['product__name']
+#     filterset_fields = ['action', 'product']
+#
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         self.perform_destroy(instance)
+#         return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 class WishlistViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
