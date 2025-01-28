@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(
-        max_length=12, required=True,
+        max_length=11, required=True,
         validators=[
             UniqueValidator(queryset=User.objects.all()), validate_phone_number
         ]
