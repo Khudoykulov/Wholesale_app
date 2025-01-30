@@ -13,7 +13,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(
         max_length=11, required=True,
         validators=[
-            UniqueValidator(queryset=User.objects.all()), validate_phone_number
+            UniqueValidator(queryset=User.objects.all()),
         ]
     )
     password1 = serializers.CharField(write_only=True, validators=[validate_password],
