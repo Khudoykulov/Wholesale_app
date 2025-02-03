@@ -50,8 +50,7 @@ class CartItemViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        CartItem.objects.all()
-        return self.queryset.filter(user=self.request.user)
+        return CartItem.objects.filter(user=self.request.user).exclude(order__is_delivered=True)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

@@ -162,6 +162,8 @@ class OrderPostSerializer(serializers.ModelSerializer):
         if not location:
             location = UserLocation.objects.filter(user=user).last()
 
+        order = Order.objects.create(**validated_data, is_delivered=True)
+
         if location:
             order.location = location
             order.save()
