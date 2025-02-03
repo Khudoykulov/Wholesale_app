@@ -35,7 +35,7 @@ class Product(models.Model):
     description = models.TextField(null=True)
     views = models.PositiveIntegerField(default=0)
     sold_count = models.PositiveIntegerField(default=0)
-    tags = models.ManyToManyField(Tag, blank=True)
+    # tags = models.ManyToManyField(Tag, blank=True)
     quantity = models.PositiveIntegerField(default=0)
     modified_date = models.DateField(auto_now=True)
     created_date = models.DateField(auto_now_add=True)

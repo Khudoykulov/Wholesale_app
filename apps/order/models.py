@@ -33,7 +33,7 @@ class CartItem(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 'order_items'
+        return self.product.name if self.product else "order_items"
 
     @property
     def get_amount(self):

@@ -176,6 +176,8 @@ class OrderPostSerializer(serializers.ModelSerializer):
                     f"Qoldiq: {product.quantity} ta."
                 )
             product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
+            print(product.quantity)
+            print(item.quantity)
             product.save()
 
         return order

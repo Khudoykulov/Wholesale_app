@@ -16,16 +16,16 @@ from apps.product.models import (
 
 
 @admin.register(Category)
-class CategoryAdmin(TranslationAdmin):
+class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'parent', 'name', 'created_date')
     date_hierarchy = 'created_date'
     search_fields = ('name',)
 
 
-@admin.register(Tag)
-class TagAdmin(TranslationAdmin):
-    list_display = ('id', 'name')
-    search_fields = ('name',)
+# @admin.register(Tag)
+# class TagAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'name')
+#     search_fields = ('name',)
 
 
 class ProductImageInline(admin.TabularInline):
@@ -34,14 +34,14 @@ class ProductImageInline(admin.TabularInline):
 
 
 @admin.register(Product)
-class ProductAdmin(TranslationAdmin):
+class ProductAdmin(admin.ModelAdmin):
     inlines = (ProductImageInline,)
     list_display = (
         'id', 'name', 'category', 'price', 'discount', 'average_rank', 'quantity', 'get_likes_count',
         'is_available',
         'created_date')
     readonly_fields = (
-        'average_rank', 'quantity', 'get_likes_count', 'is_available', 'modified_date', 'created_date')
+        'average_rank', 'get_likes_count', 'is_available', 'modified_date', 'created_date')
     date_hierarchy = 'created_date'
     search_fields = ('name', 'category__name')
     list_filter = ('category',)
@@ -79,9 +79,9 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'image')
 
 
-@admin.register(Comment)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'user', 'parent', 'top_level_comment_id', 'created_date')
-    date_hierarchy = 'created_date'
-    search_fields = ('product__name', 'user__name', 'parent__name')
-    readonly_fields = ('top_level_comment_id', 'created_date')
+# @admin.register(Comment)
+# class CommentAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'product', 'user', 'parent', 'top_level_comment_id', 'created_date')
+#     date_hierarchy = 'created_date'
+#     search_fields = ('product__name', 'user__name', 'parent__name')
+#     readonly_fields = ('top_level_comment_id', 'created_date')

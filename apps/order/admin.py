@@ -1,17 +1,18 @@
 from django.contrib import admin
 from django.utils.html import format_html
-
+from django.core.exceptions import ValidationError
 from .models import CartItem, Order, Promo
 from django.urls import path, reverse
 from django.http import HttpResponse
+
 
 @admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'name', 'discount', 'min_price', 'expire_date', 'is_expired', 'created_date')
     date_hierarchy = 'created_date'
-    list_filter = ('is_expired', )
-    filter_horizontal = ('members', )
-    readonly_fields = ('created_date', )
+    list_filter = ('is_expired',)
+    filter_horizontal = ('members',)
+    readonly_fields = ('created_date',)
     search_fields = ('user__username', 'user__full_name')
 
 
@@ -20,7 +21,7 @@ class CartItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'product', 'quantity', 'get_amount', 'created_date')
     search_fields = ('product__name', 'user__username', 'user__full_name')
     date_hierarchy = 'created_date'
-    readonly_fields = ('created_date', )
+    readonly_fields = ('created_date',)
 
 
 @admin.register(Order)
@@ -30,6 +31,21 @@ class OrderAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_date'
     readonly_fields = ('modified_date', 'created_date')
     search_fields = ('user__username', 'user__full_name')
+
+    def save_model(self, request, obj, form, change):
+        items = obj.items.all()  # Tanlangan CartItem obyektlari
+
+        for item in items:
+            product = item.product
+            if item.quantity > product.quantity:
+                raise ValidationError(
+                    f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
+                    f"Qoldiq: {product.quantity} ta."
+                )
+            product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
+            product.save()
+
+        super().save_model(request, obj, form, change)
 
     def pdf_receipt_link(self, obj):
         if obj.is_delivered:
