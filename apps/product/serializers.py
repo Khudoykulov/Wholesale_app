@@ -69,7 +69,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'discount', 'views', 'sold_count', 'images',
+        fields = ['id', 'name', 'category', 'description', 'price', 'quantity','worth', 'discount', 'views', 'sold_count', 'images',
                   'average_rank', 'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
@@ -80,7 +80,7 @@ class MiniProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'views', 'sold_count', 'images', 'average_rank',
+        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'worth', 'views', 'sold_count', 'images', 'average_rank',
                  'get_likes_count', 'is_available', 'modified_date', 'created_date']
         read_only_fields = ['views', 'is_available']
 
@@ -91,7 +91,7 @@ class ProductPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'discount', 'images',]
+        fields = ['id', 'name', 'category', 'description', 'price', 'quantity', 'worth', 'discount', 'images',]
 
     def create(self, validated_data):
         images = validated_data.pop('images', [])

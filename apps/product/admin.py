@@ -37,7 +37,7 @@ class ProductImageInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     inlines = (ProductImageInline,)
     list_display = (
-        'id', 'name', 'category', 'price', 'discount', 'average_rank', 'quantity', 'get_likes_count',
+        'id', 'name', 'category', 'price', 'discount', 'average_rank', 'quantity', 'worth', 'get_likes_count',
         'is_available',
         'created_date')
     readonly_fields = (
