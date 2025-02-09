@@ -97,18 +97,22 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'location', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date',
+        fields = ['id', 'user', 'location', 'file', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date',
                   'created_date',
                   ]
 
 
 class OrderPostSerializer(serializers.ModelSerializer):
-    items = serializers.PrimaryKeyRelatedField(queryset=CartItem.objects.all(), many=True)
+    # items = serializers.PrimaryKeyRelatedField(queryset=CartItem.objects.all(), many=True)
+    items = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
     location = serializers.PrimaryKeyRelatedField(queryset=UserLocation.objects.all(), required=False)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'items', 'promo', 'location', 'get_amount', 'modified_date', 'created_date']
+        fields = ['id', 'user', 'items', 'promo', 'location', 'file', 'get_amount', 'modified_date', 'created_date']
         read_only_fields = ['user', 'items', 'amount']
 
     def validate(self, attrs):
@@ -152,34 +156,5 @@ class OrderPostSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        request = self.context.get('request')  # `request`ni context orqali olish
-        user = request.user  # Hozirgi foydalanuvchi
-        validated_data['user'] = user  # `user`ni validated_data'ga qo'shamiz
-        items = validated_data.pop('items', [])
-        order = Order.objects.create(**validated_data)
-        location = validated_data.pop('location', None)
-        # Agar location bo'lmasa, foydalanuvchining oxirgi locatsiyasini tanlash
-        if not location:
-            location = UserLocation.objects.filter(user=user).last()
-
-        order = Order.objects.create(**validated_data, is_delivered=True)
-
-        if location:
-            order.location = location
-            order.save()
-
-        # `Order`ga `items`ni qo'shamiz
-        for item in items:
-            order.items.add(item)
-            product = item.product  # `CartItem`dagi `product`ni olish
-            if item.quantity > product.quantity:
-                raise ValidationError(
-                    f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
-                    f"Qoldiq: {product.quantity} ta."
-                )
-            product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
-            print(product.quantity)
-            print(item.quantity)
-            product.save()
-
-        return order
+        validated_data['user'] = self.context['request'].user  # User ni to‘g‘ridan-to‘g‘ri o‘rnatish
+        return super().create(validated_data)

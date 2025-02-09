@@ -3,7 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
-
+from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser, FormParser
 from apps.order.models import (
     Order,
     CartItem,
@@ -73,7 +74,61 @@ class OrderViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     model = Order
     serializer_post_class = OrderPostSerializer
     queryset = Order.objects.all()
+    parser_classes = (MultiPartParser, FormParser)
     permission_classes = (IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        print("Request data:", dict(request.data))  # Debug uchun
+
+        # `items` string yoki list sifatida kelishi mumkin, uni to'g'ri formatga keltiramiz
+        items_raw = request.data.get("items", [])
+        if isinstance(items_raw, list):  # Agar list bo'lsa, birinchi elementini olish
+            items_raw = items_raw[0] if items_raw else ""
+
+        try:
+            items_list = [int(i) for i in items_raw.split(",") if i.strip().isdigit()]
+        except ValueError:
+            return Response({"error": "Noto‘g‘ri item ID berilgan."}, status=status.HTTP_400_BAD_REQUEST)
+
+        print("Converted Items:", items_list)  # Debug uchun
+
+        # `items` yangilangan formatda serializerga uzatiladi
+        data = request.data.copy()
+        data.setlist("items", [str(i) for i in items_list])  # Serializer list sifatida ishlashi uchun
+        data["user"] = request.user.id  # Faqatgina ID saqlanishi kerak
+        print("User ID:", data["user"])  # Debug uchun
+
+        serializer = self.get_serializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            order = serializer.save()
+
+            # Orderning `items`larini `CartItem` orqali bog‘lash
+            cart_items = CartItem.objects.filter(id__in=items_list)
+            if cart_items.count() != len(items_list):
+                return Response(
+                    {"error": "Ba'zi itemlar mavjud emas yoki noto‘g‘ri ID berilgan."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            for item in cart_items:
+                order.items.add(item)
+                product = item.product  # `CartItem` dan mahsulotni olish
+
+                # Mahsulot yetarlimi tekshirish
+                if item.quantity > product.quantity:
+                    return Response(
+                        {"error": f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
+                                  f"Qoldiq: {product.quantity} ta."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Mahsulot miqdorini kamaytirish
+                product.quantity -= item.quantity
+                product.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         # Agar foydalanuvchi superuser bo'lsa, barcha orderlarni qaytaramiz

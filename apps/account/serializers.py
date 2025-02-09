@@ -5,7 +5,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password, password_validators_help_texts
 from apps.account.models import User, UserToken
-from .models import UserLocation, NewBlock, Advice, Call, Banner
+from .models import UserLocation, NewBlock, Advice, Call, Banner, Carta
 from django.contrib.auth import get_user_model
 
 
@@ -127,3 +127,9 @@ class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
         fields = ['id', 'image']
+
+
+class CartaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Carta
+        fields = ['id', 'user_carta_name', 'bank_name', 'carta_number', 'bank_number']

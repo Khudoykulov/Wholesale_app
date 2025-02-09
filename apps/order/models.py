@@ -40,10 +40,42 @@ class CartItem(models.Model):
         return (float(self.product.price) * ((100 - (self.product.discount or 0)) / 100)) * self.quantity
 
 
+from django.core.exceptions import ValidationError
+import mimetypes
+
+
+def validate_file_type(value):
+    allowed_mime_types = [
+        "image/",  # Barcha rasm formatlari (JPEG, PNG, GIF, WEBP, SVG, TIFF, BMP va boshqalar)
+        "application/pdf",  # PDF fayllar
+        "application/msword",  # .doc
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # .docx
+        "application/vnd.ms-excel",  # .xls
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # .xlsx
+        "application/zip",  # ZIP fayllar
+        "application/x-rar-compressed",  # RAR fayllar
+        "application/x-7z-compressed",  # 7z fayllar
+    ]
+
+    mime_type, _ = mimetypes.guess_type(value.name)
+
+    if not mime_type:
+        raise ValidationError("Noto‘g‘ri fayl turi!")
+
+    # Barcha rasm formatlarini avtomatik qabul qilish uchun "image/" bilan boshlanganlarini tekshiramiz
+    if not any(mime_type.startswith(allowed) for allowed in allowed_mime_types):
+        raise ValidationError("Faqat rasm yoki hujjat fayllarini yuklash mumkin!")
+
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    location = models.ForeignKey(UserLocation,on_delete=models.SET_NULL,null=True,blank=True,related_name='orders_location')
+    location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='orders_location')
     items = models.ManyToManyField(CartItem)
+    file = models.FileField(blank=True, null=True,
+                            upload_to="uploads/",
+                            validators=[validate_file_type]
+                            )
     promo = models.CharField(max_length=8, null=True, blank=True)
     is_delivered = models.BooleanField(default=False)
     modified_date = models.DateTimeField(auto_now_add=True)

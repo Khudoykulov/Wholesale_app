@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserToken, UserLocation, NewBlock, Advice, Call, Banner
+from .models import User, UserToken, UserLocation, NewBlock, Advice, Call, Banner, Carta
 from .forms import UserCreationForm, UserChangeForm
 
 
@@ -9,8 +9,8 @@ class UserAdmin(BaseUserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     list_display = (
-    'id', 'phone', 'name', 'location__latitude', 'location__longitude', 'is_superuser', 'is_staff', 'is_active',
-    'created_date')
+        'id', 'phone', 'name', 'location__latitude', 'location__longitude', 'is_superuser', 'is_staff', 'is_active',
+        'created_date')
     readonly_fields = ('last_login', 'modified_date', 'created_date')
     list_filter = ('is_superuser', 'is_staff', 'is_active')
     date_hierarchy = 'created_date'
@@ -72,3 +72,10 @@ class AdviceAdmin(admin.ModelAdmin):
 class BannerAdmin(admin.ModelAdmin):
     list_display = ['id', 'image']
     search_fields = ['id']
+
+
+@admin.register(Carta)
+class CartaAdmin(admin.ModelAdmin):
+    list_display = ("user_carta_name", "bank_name", "carta_number", "bank_number")
+    search_fields = ("user_carta_name", "bank_name", "carta_number")
+    list_filter = ("bank_name",)

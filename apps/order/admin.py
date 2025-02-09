@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from .models import CartItem, Order, Promo
 from django.urls import path, reverse
 from django.http import HttpResponse
+from django.db import transaction
 
 
 @admin.register(Promo)
@@ -33,17 +34,23 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__full_name')
 
     def save_model(self, request, obj, form, change):
-        items = obj.items.all()  # Tanlangan CartItem obyektlari
+        """Buyurtma saqlanayotganda mahsulot miqdorini tekshirish va kamaytirish"""
+        with transaction.atomic():  # Tranzaksiya blokiga olish
+            super().save_model(request, obj, form, change)  # Avval Order saqlanadi
 
-        for item in items:
-            product = item.product
-            if item.quantity > product.quantity:
-                raise ValidationError(
-                    f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
-                    f"Qoldiq: {product.quantity} ta."
-                )
-            product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
-            product.save()
+            obj.refresh_from_db()  # Yangi obyekt uchun ID ni yuklash
+            items = obj.items.all()  # Endi ManyToMany maydoni ishlaydi
+
+            for item in items:
+                product = item.product
+                if item.quantity > product.quantity:
+                    raise ValidationError(
+                        f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
+                        f"Qoldiq: {product.quantity} ta."
+                    )
+
+                product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
+                product.save()
 
         super().save_model(request, obj, form, change)
 

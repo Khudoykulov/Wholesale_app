@@ -20,10 +20,11 @@ from apps.account.serializers import (
     CustomTokenObtainPairSerializer,
     NewBlockSerializer,
     AdviceSerializer,
-    CallSerializer
+    CallSerializer,
+    CartaSerializer
 )
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
-from .models import UserLocation, NewBlock, Advice, Call
+from .models import UserLocation, NewBlock, Advice, Call, Carta
 from .serializers import UserLocationSerializer
 from ..product.permissions import IsAdminOrReadOnly
 
@@ -171,3 +172,9 @@ class BannerViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'deleted': True}, status=status.HTTP_200_OK)
+
+
+class CartaViewSet(viewsets.ModelViewSet):
+    queryset = Carta.objects.all()
+    serializer_class = CartaSerializer
+    permission_classes = [IsAdminOrReadOnly]

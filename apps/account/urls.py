@@ -31,7 +31,8 @@ from .views import (
     NewBlockListCreateView,
     AdviceViewSet,
     CallViewSet,
-    BannerViewSet
+    BannerViewSet,
+    CartaViewSet
 )
 
 router = DefaultRouter()
@@ -39,6 +40,8 @@ router.register(r'location', UserLocationUpdateAPIView, basename='location')
 router.register(r'advices', AdviceViewSet, basename='advice')
 router.register(r'call', CallViewSet, basename='call')
 router.register(r'banners', BannerViewSet, basename='banner')
+router.register(r'carta', CartaViewSet)  # `/cartas/` API yo‘liga bog‘laymiz
+
 urlpatterns = [
     path('', include(router.urls)),
     path('profile/', UserProfileAPIView.as_view(), name='user-profile'),

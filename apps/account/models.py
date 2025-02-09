@@ -115,3 +115,16 @@ class Banner(models.Model):
 
     def __str__(self):
         return 'banner'
+
+
+class Carta(models.Model):
+    user_carta_name = models.CharField(max_length=123)
+    bank_name = models.CharField(max_length=123)
+    carta_number = models.CharField(max_length=123)
+    bank_number = models.IntegerField()
+    modified_date = models.DateTimeField(auto_now=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user_carta_name}  --->  {self.bank_name}"
+
