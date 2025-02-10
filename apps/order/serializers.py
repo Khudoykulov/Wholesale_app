@@ -93,11 +93,11 @@ class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializersOrder(read_only=True)
     items = CartItemSerializer(many=True, read_only=True)
     promo = serializers.CharField(required=False, allow_blank=True)
-    location = UserLocationSerializer(read_only=True)
+    # location = UserLocationSerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'location', 'file', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date',
+        fields = ['id', 'user', 'location_data', 'file', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date',
                   'created_date',
                   ]
 

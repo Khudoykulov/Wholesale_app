@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from apps.account.models import User, UserLocation
 from apps.product.models import Product
+from django.core.serializers.json import DjangoJSONEncoder
 
 from django.utils import timezone
 from django.http import HttpResponse
@@ -71,6 +72,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name='orders_location')
+    location_data = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)  # Eski locationni saqlash
     items = models.ManyToManyField(CartItem)
     file = models.FileField(blank=True, null=True,
                             upload_to="uploads/",
@@ -117,3 +119,18 @@ class Order(models.Model):
             return response
         else:
             return None
+
+    def save(self, *args, **kwargs):
+        # Agar location mavjud bo‘lsa, eski ma'lumotlarni saqlab qo‘yamiz
+        if self.location and not self.location_data:
+            self.location_data = {
+                "id": self.location.id,
+                "location": self.location.location,
+                "latitude": self.location.latitude,
+                "longitude": self.location.longitude,
+                "floor": self.location.floor,
+                "apartment": self.location.apartment,
+                "modified_date": self.location.modified_date,
+                "created_date": self.location.created_date,
+            }
+        super().save(*args, **kwargs)
