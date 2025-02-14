@@ -93,7 +93,7 @@ class Order(models.Model):
             except Promo.DoesNotExist:
                 # Agar mos promo mavjud bo'lmasa, chegirmasiz qaytaramiz
                 return sum(item.get_amount for item in self.items.all())
-        return sum(item.get_amount for item in self.items.all())
+        return round((sum(item.get_amount for item in self.items.all())),2)
 
     @property
     def generate_pdf_receipt(self):

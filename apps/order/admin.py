@@ -5,7 +5,8 @@ from .models import CartItem, Order, Promo
 from django.urls import path, reverse
 from django.http import HttpResponse
 from django.db import transaction
-
+from django.utils.safestring import mark_safe
+import json
 
 @admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
@@ -27,11 +28,56 @@ class CartItemAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'get_amount', 'is_delivered', 'pdf_receipt_link', 'created_date')
-    list_display_links = ('id', 'user', 'get_amount',)
+    list_display = (
+    'id', 'get_user_name', 'get_user_phone', 'get_file_link', 'get_amount', 'location_address', 'created_date')
+    list_display_links = ('id', 'get_user_name', 'get_amount',)
+    fields = ['get_user_name', 'get_user_phone', 'formatted_location_data', 'created_date']
     date_hierarchy = 'created_date'
-    readonly_fields = ('modified_date', 'created_date')
-    search_fields = ('user__username', 'user__full_name')
+    readonly_fields = ('get_user_name', 'get_user_phone', 'modified_date', 'created_date', 'formatted_location_data')
+
+
+    def formatted_location_data(self, obj):
+        if obj.location_data:
+            formatted_json = json.dumps(obj.location_data, indent=4, ensure_ascii=False)
+            return mark_safe(f"""
+            <style>
+                pre {{
+                    background-color: #282C34;
+                    color: #61DAFB;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-size: 18px;
+                    overflow-x: auto;
+                }}
+            </style>
+            <pre>{formatted_json}</pre>
+            """)
+        return "N/A"
+    formatted_location_data.short_description = "Formatted Location Data"
+
+    def location_address(self, obj):
+        if obj.location_data:
+            return obj.location_data.get('location', 'N/A')  # Agar `address` bo‘lsa, chiqaramiz
+        return "N/A"
+
+    location_address.short_description = "Location Address"
+
+    def get_file_link(self, obj):
+        if obj.file:
+            return format_html('<a href="{}" download>{}</a>', obj.file.url, "Download File 📂")
+        return "No File"
+
+    get_file_link.short_description = "File"
+
+    def get_user_name(self, obj):
+        return obj.user.name
+
+    get_user_name.short_description = "User Name"
+
+    def get_user_phone(self, obj):
+        return obj.user.phone
+
+    get_user_phone.short_description = "User Phone"
 
     def save_model(self, request, obj, form, change):
         """Buyurtma saqlanayotganda mahsulot miqdorini tekshirish va kamaytirish"""

@@ -12,8 +12,7 @@ class UserAdmin(BaseUserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     list_display = (
-        'id', 'phone', 'name', 'location__latitude', 'location__longitude', 'is_superuser', 'is_staff', 'is_active',
-        'created_date')
+        'name', 'phone', 'created_date')
     readonly_fields = ('last_login', 'modified_date', 'created_date')
     list_filter = ('is_superuser', 'is_staff', 'is_active')
     date_hierarchy = 'created_date'
