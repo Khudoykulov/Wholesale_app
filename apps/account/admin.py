@@ -1,8 +1,11 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, UserToken, UserLocation, NewBlock, Advice, Call, Banner, Carta
 from .forms import UserCreationForm, UserChangeForm
+
+admin.site.unregister(Group)  # "Groups" bo‘limini admin paneldan o‘chiradi
 
 
 class UserAdmin(BaseUserAdmin):
@@ -15,8 +18,8 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_superuser', 'is_staff', 'is_active')
     date_hierarchy = 'created_date'
     fieldsets = (
-        (None, {'fields': ('name', 'phone', 'password', 'avatar',)}),
-        (_('Permissions'), {'fields': ('is_superuser', 'is_staff', 'is_active', 'groups', 'user_permissions')}),
+        (None, {'fields': ('name', 'phone', 'password', 'avatar', 'user_permissions',)}),
+        (_('Permissions'), {'fields': ('is_superuser', 'is_staff', 'is_active', 'groups',)}),
         (_('Important dates'), {'fields': ('last_login', 'modified_date', 'created_date')}),
     )
     add_fieldsets = (
@@ -24,8 +27,7 @@ class UserAdmin(BaseUserAdmin):
     )
     search_fields = ('name', 'phone')
     ordering = ('name',)
-    filter_horizontal = ()
-
+    filter_horizontal = ('user_permissions', 'groups')
 
 @admin.register(UserToken)
 class UserTokenAdmin(admin.ModelAdmin):
