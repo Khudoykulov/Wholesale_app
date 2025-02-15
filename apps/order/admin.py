@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils.safestring import mark_safe
 import json
 
+
 @admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'name', 'discount', 'min_price', 'expire_date', 'is_expired', 'created_date')
@@ -29,12 +30,11 @@ class CartItemAdmin(admin.ModelAdmin):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
-    'id', 'get_user_name', 'get_user_phone', 'get_file_link', 'get_amount', 'location_address', 'created_date')
+        'id', 'get_user_name', 'get_user_phone', 'get_file_link', 'get_amount', 'location_address', 'created_date')
     list_display_links = ('id', 'get_user_name', 'get_amount',)
-    fields = ['get_user_name', 'get_user_phone', 'formatted_location_data', 'created_date']
+    fields = ['get_user_name', 'get_user_phone', 'formatted_items', 'get_amount', 'formatted_location_data', 'created_date']
     date_hierarchy = 'created_date'
-    readonly_fields = ('get_user_name', 'get_user_phone', 'modified_date', 'created_date', 'formatted_location_data')
-
+    readonly_fields = ('get_amount', 'formatted_items', 'get_user_name', 'get_user_phone', 'modified_date', 'created_date', 'formatted_location_data')
 
     def formatted_location_data(self, obj):
         if obj.location_data:
@@ -53,6 +53,7 @@ class OrderAdmin(admin.ModelAdmin):
             <pre>{formatted_json}</pre>
             """)
         return "N/A"
+
     formatted_location_data.short_description = "Formatted Location Data"
 
     def location_address(self, obj):
@@ -71,6 +72,16 @@ class OrderAdmin(admin.ModelAdmin):
 
     def get_user_name(self, obj):
         return obj.user.name
+
+    def formatted_items(self, obj):
+        """ Buyurtmaga tegishli mahsulotlar ro‘yxatini chiqarish """
+        if obj.items.exists():
+            items_html = "<ul>"
+            for item in obj.items.all():
+                items_html += f"<li>{item.product.name} - {item.quantity} dona</li>"
+            items_html += "</ul>"
+            return format_html(items_html)
+        return "No Items"
 
     get_user_name.short_description = "User Name"
 
