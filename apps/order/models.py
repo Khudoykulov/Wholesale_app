@@ -104,7 +104,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders_location')
     location_data = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)
-    items = models.ManyToManyField('CartItem')
+    items = models.ManyToManyField(CartItem)
     file = models.FileField(blank=True, null=True, upload_to="uploads/", validators=[validate_file_type])
     promo = models.CharField(max_length=8, null=True, blank=True)
     courier = models.ForeignKey(Courier, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
