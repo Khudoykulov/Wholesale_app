@@ -93,17 +93,15 @@ class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializersOrder(read_only=True)
     items = CartItemSerializer(many=True, read_only=True)
     promo = serializers.CharField(required=False, allow_blank=True)
-    # location = UserLocationSerializer(read_only=True)
+    status = serializers.CharField(source='get_status_display')
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'location_data', 'file', 'items', 'promo', 'get_amount', 'is_delivered', 'modified_date',
-                  'created_date',
-                  ]
+        fields = ['id', 'user', 'location_data', 'file', 'items', 'promo', 'get_amount', 'status', 'modified_date',
+                  'created_date']
 
 
 class OrderPostSerializer(serializers.ModelSerializer):
-    # items = serializers.PrimaryKeyRelatedField(queryset=CartItem.objects.all(), many=True)
     items = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True
@@ -113,10 +111,9 @@ class OrderPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'user', 'items', 'promo', 'location', 'file', 'get_amount', 'modified_date', 'created_date']
-        read_only_fields = ['user', 'items', 'amount']
+        read_only_fields = ['user', 'items', 'get_amount']
 
     def validate(self, attrs):
-        # Promo kod tekshiruvi
         user = self.context.get('request').user
         location_id = self.context['request'].data.get('location')
 
@@ -124,30 +121,25 @@ class OrderPostSerializer(serializers.ModelSerializer):
             try:
                 location = UserLocation.objects.get(id=location_id, user=user)
             except UserLocation.DoesNotExist:
-                raise ValidationError("Berilgan locatsiya mavjud emas yoki sizga tegishli emas.")
+                raise ValidationError("Berilgan joylashuv mavjud emas yoki sizga tegishli emas.")
         else:
-            # Agar locatsiya berilmagan bo'lsa, foydalanuvchining oxirgi locatsiyasini olishga urinadi
             location = UserLocation.objects.filter(user=user).last()
             if not location:
-                raise ValidationError("Locatsiya topilmadi. Iltimos, locatsiyani qo'shing.")
+                raise ValidationError("Joylashuv topilmadi. Iltimos, joylashuv qo'shing.")
 
         attrs['location'] = location
         promo_code = attrs.get('promo', None)
         if promo_code:
             try:
                 promo = Promo.objects.get(name=promo_code)
-                # Promo kodining muddati o'tganmi
                 if promo.is_expired:
-                    raise ValidationError("Promo kodining muddati o'tgan.")
-                # Buyurtma miqdori minimal narxdan kichikmi?
+                    raise ValidationError("Promo kodning muddati o'tgan.")
                 total_amount = sum(item.get_amount for item in attrs['items'])
                 if total_amount < promo.min_price:
                     raise ValidationError(
                         f"Promo kodni ishlatish uchun buyurtma miqdori {promo.min_price} dan kam bo'lmasligi kerak.")
-                # Foydalanuvchi promo koddan oldin foydalanganmi?
                 if promo.members.filter(id=user.id).exists():
                     raise ValidationError("Siz bu promo kodni allaqachon ishlatgansiz.")
-                # Promo kodni qo'shish
                 promo.members.add(user)
                 promo.save()
             except Promo.DoesNotExist:
@@ -156,5 +148,5 @@ class OrderPostSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user  # User ni to‘g‘ridan-to‘g‘ri o‘rnatish
+        validated_data['user'] = self.context['request'].user
         return super().create(validated_data)

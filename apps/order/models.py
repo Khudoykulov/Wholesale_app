@@ -6,7 +6,7 @@ from django.db.models.signals import pre_save
 from apps.account.models import User, UserLocation
 from apps.product.models import Product
 from django.core.serializers.json import DjangoJSONEncoder
-
+from django.contrib.auth.models import Group
 from django.utils import timezone
 from django.http import HttpResponse
 from apps.order.utils import generate_receipt_pdf  # PDF yaratish funksiyasi
@@ -68,18 +68,49 @@ def validate_file_type(value):
         raise ValidationError("Faqat rasm yoki hujjat fayllarini yuklash mumkin!")
 
 
+class Courier(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=15)
+
+
+    # Group tanlanadigan qilib ManyToOne (ya'ni ForeignKey)
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user}  --->  {self.phone}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.user:
+            self.user.is_staff = True
+            self.user.is_active = True
+            self.user.save()
+
+            # Avvalgi guruhlardan tozalaymiz (agar xohlasangiz)
+            self.user.groups.clear()
+
+            # Tanlangan groupga biriktiramiz
+            if self.group:
+                self.user.groups.add(self.group)
+
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('preparing', 'Tayyorlanmoqda'),
+        ('out_for_delivery', 'Yetkazilmoqda'),
+        ('delivered', 'Yetkazildi'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True,
-                                 related_name='orders_location')
-    location_data = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)  # Eski locationni saqlash
-    items = models.ManyToManyField(CartItem)
-    file = models.FileField(blank=True, null=True,
-                            upload_to="uploads/",
-                            validators=[validate_file_type]
-                            )
+    location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders_location')
+    location_data = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)
+    items = models.ManyToManyField('CartItem')
+    file = models.FileField(blank=True, null=True, upload_to="uploads/", validators=[validate_file_type])
     promo = models.CharField(max_length=8, null=True, blank=True)
-    is_delivered = models.BooleanField(default=False)
+    courier = models.ForeignKey(Courier, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='preparing')
+    assigned_date = models.DateTimeField(null=True, blank=True)
+    delivered_date = models.DateTimeField(null=True, blank=True)
     modified_date = models.DateTimeField(auto_now_add=True)
     created_date = models.DateTimeField(auto_now_add=True)
 
@@ -91,14 +122,11 @@ class Order(models.Model):
                 return float(
                     sum(item.get_amount for item in self.items.all()) * (((100 - promo_object.discount) or 0) / 100))
             except Promo.DoesNotExist:
-                # Agar mos promo mavjud bo'lmasa, chegirmasiz qaytaramiz
                 return sum(item.get_amount for item in self.items.all())
-        return round((sum(item.get_amount for item in self.items.all())),2)
+        return round((sum(item.get_amount for item in self.items.all())), 2)
 
-    @property
     def generate_pdf_receipt(self):
-        if self.is_delivered:
-            # Order ma'lumotlari va mahsulotlar ro'yxatini yig'ish
+        if self.status == 'delivered':
             order_data = {
                 'user': self.user.name,
                 'order_date': self.created_date.strftime("%Y-%m-%d %H:%M"),
@@ -112,7 +140,6 @@ class Order(models.Model):
                     for item in self.items.all()
                 ]
             }
-            # PDF generatsiya qilish
             pdf_content = generate_receipt_pdf(order_data)
             response = HttpResponse(pdf_content, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="order_{self.id}_receipt.pdf"'
@@ -121,7 +148,6 @@ class Order(models.Model):
             return None
 
     def save(self, *args, **kwargs):
-        # Agar location mavjud bo‘lsa, eski ma'lumotlarni saqlab qo‘yamiz
         if self.location and not self.location_data:
             self.location_data = {
                 "id": self.location.id,
@@ -133,4 +159,10 @@ class Order(models.Model):
                 "modified_date": self.location.modified_date,
                 "created_date": self.location.created_date,
             }
+        if self.courier and not self.assigned_date:
+            self.assigned_date = timezone.now()
+            if self.status != 'out_for_delivery':
+                self.status = 'out_for_delivery'
+        if self.status == 'delivered' and not self.delivered_date:
+            self.delivered_date = timezone.now()
         super().save(*args, **kwargs)

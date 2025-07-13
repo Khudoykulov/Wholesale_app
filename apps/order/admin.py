@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.core.exceptions import ValidationError
-from .models import CartItem, Order, Promo
+from .models import CartItem, Order, Promo, Courier
 from django.urls import path, reverse
 from django.http import HttpResponse
 from django.db import transaction
@@ -26,15 +26,48 @@ class CartItemAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_date'
     readonly_fields = ('created_date',)
 
-
+    @admin.register(Courier)
+    class CourierAdmin(admin.ModelAdmin):
+        list_display = ('user', 'phone', 'group')
+        search_fields = ('user', 'phone', 'group__name')
+        list_filter = ('group',)
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'get_user_name', 'get_user_phone', 'get_file_link', 'get_amount', 'location_address', 'created_date')
+        'id', 'get_user_name', 'get_user_phone', 'status', 'courier', 'get_file_link', 'get_amount', 'location_address', 'created_date')
     list_display_links = ('id', 'get_user_name', 'get_amount',)
-    fields = ['get_user_name', 'get_user_phone', 'formatted_items', 'get_amount', 'formatted_location_data', 'created_date']
+    fields = ['get_user_name', 'get_user_phone', 'formatted_items', 'get_amount', 'status', 'courier', 'assigned_date', 'delivered_date', 'created_date', 'formatted_location_data']
     date_hierarchy = 'created_date'
-    readonly_fields = ('get_amount', 'formatted_items', 'get_user_name', 'get_user_phone', 'modified_date', 'created_date', 'formatted_location_data')
+    readonly_fields = ('get_amount', 'formatted_items', 'get_user_name', 'get_user_phone', 'assigned_date', 'delivered_date', 'created_date', 'modified_date', 'formatted_location_data')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_staff and not request.user.groups.filter(name='Courier').exists():
+            return qs
+        elif request.user.groups.filter(name='Courier').exists():
+            try:
+                courier = Courier.objects.get(user=request.user)
+                return qs.filter(courier=courier)
+            except Courier.DoesNotExist:
+                return qs.none()
+        else:
+            return qs.none()
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_staff and not request.user.groups.filter(name='Courier').exists():
+            return True
+        elif request.user.groups.filter(name='Courier').exists():
+            if obj and obj.courier and obj.courier.user == request.user:
+                return True
+            return False
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.groups.filter(name='Courier').exists():
+            all_fields = [f.name for f in self.model._meta.fields] + [f.name for f in self.model._meta.many_to_many]
+            return [f for f in all_fields if f != 'status']
+        else:
+            return self.readonly_fields
 
     def formatted_location_data(self, obj):
         if obj.location_data:
@@ -54,50 +87,48 @@ class OrderAdmin(admin.ModelAdmin):
             """)
         return "N/A"
 
-    formatted_location_data.short_description = "Formatted Location Data"
+    formatted_location_data.short_description = "Joylashuv Ma'lumotlari"
 
     def location_address(self, obj):
         if obj.location_data:
-            return obj.location_data.get('location', 'N/A')  # Agar `address` bo‘lsa, chiqaramiz
+            return obj.location_data.get('location', 'N/A')
         return "N/A"
 
-    location_address.short_description = "Location Address"
+    location_address.short_description = "Manzil"
 
     def get_file_link(self, obj):
         if obj.file:
-            return format_html('<a href="{}" download>{}</a>', obj.file.url, "Download File 📂")
-        return "No File"
+            return format_html('<a href="{}" download>{}</a>', obj.file.url, "Faylni Yuklab Olish 📂")
+        return "Fayl Yo'q"
 
-    get_file_link.short_description = "File"
+    get_file_link.short_description = "Fayl"
 
     def get_user_name(self, obj):
         return obj.user.name
 
+    get_user_name.short_description = "Foydalanuvchi Ismi"
+
+    def get_user_phone(self, obj):
+        return obj.user.phone
+
+    get_user_phone.short_description = "Foydalanuvchi Telefon Raqami"
+
     def formatted_items(self, obj):
-        """ Buyurtmaga tegishli mahsulotlar ro‘yxatini chiqarish """
         if obj.items.exists():
             items_html = "<ul>"
             for item in obj.items.all():
                 items_html += f"<li>{item.product.name} - {item.quantity} dona</li>"
             items_html += "</ul>"
             return format_html(items_html)
-        return "No Items"
+        return "Mahsulotlar Yo'q"
 
-    get_user_name.short_description = "User Name"
-
-    def get_user_phone(self, obj):
-        return obj.user.phone
-
-    get_user_phone.short_description = "User Phone"
+    formatted_items.short_description = "Mahsulotlar"
 
     def save_model(self, request, obj, form, change):
-        """Buyurtma saqlanayotganda mahsulot miqdorini tekshirish va kamaytirish"""
-        with transaction.atomic():  # Tranzaksiya blokiga olish
-            super().save_model(request, obj, form, change)  # Avval Order saqlanadi
-
-            obj.refresh_from_db()  # Yangi obyekt uchun ID ni yuklash
-            items = obj.items.all()  # Endi ManyToMany maydoni ishlaydi
-
+        with transaction.atomic():
+            super().save_model(request, obj, form, change)
+            obj.refresh_from_db()
+            items = obj.items.all()
             for item in items:
                 product = item.product
                 if item.quantity > product.quantity:
@@ -105,19 +136,16 @@ class OrderAdmin(admin.ModelAdmin):
                         f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
                         f"Qoldiq: {product.quantity} ta."
                     )
-
-                product.quantity -= item.quantity  # Mahsulot miqdorini kamaytirish
+                product.quantity -= item.quantity
                 product.save()
 
-        super().save_model(request, obj, form, change)
-
     def pdf_receipt_link(self, obj):
-        if obj.is_delivered:
+        if obj.status == 'delivered':
             url = reverse('admin:order-pdf', args=[obj.id])
-            return format_html('<a href="{}">Download PDF</a>', url)
-        return "Not available"
+            return format_html('<a href="{}">PDFni Yuklab Olish</a>', url)
+        return "Mavjud Emas"
 
-    pdf_receipt_link.short_description = 'PDF Receipt'
+    pdf_receipt_link.short_description = 'PDF Chek'
 
     def get_urls(self):
         urls = super().get_urls()
@@ -128,8 +156,8 @@ class OrderAdmin(admin.ModelAdmin):
 
     def download_pdf(self, request, order_id):
         order = self.get_object(request, order_id)
-        if order and order.is_delivered:
+        if order and order.status == 'delivered':
             response = HttpResponse(order.generate_pdf_receipt, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="order_{order_id}_receipt.pdf"'
             return response
-        return HttpResponse("Receipt not available", status=404)
+        return HttpResponse("Chek mavjud emas", status=404)

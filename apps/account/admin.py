@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, UserToken, UserLocation, NewBlock, Advice, Call, Banner, Carta
 from .forms import UserCreationForm, UserChangeForm
 
-admin.site.unregister(Group)  # "Groups" bo‘limini admin paneldan o‘chiradi
+# admin.site.unregister(Group)  # "Groups" bo‘limini admin paneldan o‘chiradi
 
 
 class UserAdmin(BaseUserAdmin):
