@@ -31,14 +31,19 @@ class CartItemAdmin(admin.ModelAdmin):
         list_display = ('user', 'phone', 'group')
         search_fields = ('user', 'phone', 'group__name')
         list_filter = ('group',)
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'get_user_name', 'get_user_phone', 'status', 'courier', 'get_file_link', 'get_amount', 'location_address', 'created_date')
+        'id', 'get_user_name', 'get_user_phone', 'status', 'courier', 'get_file_link', 'get_amount', 'location_address',
+        'created_date')
     list_display_links = ('id', 'get_user_name', 'get_amount',)
-    fields = ['get_user_name', 'get_user_phone', 'formatted_items', 'get_amount', 'status', 'courier', 'assigned_date', 'delivered_date', 'created_date', 'formatted_location_data']
+    fields = ['get_user_name', 'get_user_phone', 'formatted_items', 'formatted_items_data', 'get_amount', 'status', 'courier',
+              'assigned_date', 'delivered_date', 'created_date', 'formatted_location_data']
     date_hierarchy = 'created_date'
-    readonly_fields = ('get_amount', 'formatted_items', 'get_user_name', 'get_user_phone', 'assigned_date', 'delivered_date', 'created_date', 'modified_date', 'formatted_location_data')
+    readonly_fields = ('get_amount','formatted_items', 'formatted_items_data', 'get_user_name', 'get_user_phone', 'assigned_date',
+                       'delivered_date', 'created_date', 'modified_date', 'formatted_location_data')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -123,6 +128,43 @@ class OrderAdmin(admin.ModelAdmin):
         return "Mahsulotlar Yo'q"
 
     formatted_items.short_description = "Mahsulotlar"
+
+    def formatted_items_data(self, obj):
+        if obj.items_data:
+            formatted_json = json.dumps(obj.items_data, indent=4, ensure_ascii=False)
+            return mark_safe(f"""
+            <style>
+                pre {{
+                    background-color: #282C34;
+                    color: #61DAFB;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-size: 18px;
+                    overflow-x: auto;
+                }}
+            </style>
+            <pre>{formatted_json}</pre>
+            """)
+        return "N/A"
+
+    formatted_items_data.short_description = "Mahsulotlar Ma'lumotlari"
+
+    def save_model(self, request, obj, form, change):
+        with transaction.atomic():
+            super().save_model(request, obj, form, change)
+            obj.refresh_from_db()
+            items = obj.items.all()
+            for item in items:
+                product = item.product
+                if item.quantity > product.quantity:
+                    raise ValidationError(
+                        f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
+                        f"Qoldiq: {product.quantity} ta."
+                    )
+                product.quantity -= item.quantity
+                product.save()
+
+    formatted_items_data.short_description = "Mahsulotlar data"
 
     def save_model(self, request, obj, form, change):
         with transaction.atomic():

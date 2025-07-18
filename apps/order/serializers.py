@@ -91,13 +91,13 @@ class UserSerializersOrder(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializersOrder(read_only=True)
-    items = CartItemSerializer(many=True, read_only=True)
+    items_data = serializers.JSONField(read_only=True)  # Yangi qo'shilgan maydon
     promo = serializers.CharField(required=False, allow_blank=True)
     status = serializers.CharField(source='get_status_display')
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'location_data', 'file', 'items', 'promo', 'get_amount', 'status', 'modified_date',
+        fields = ['id', 'user', 'location_data', 'file', 'items_data', 'promo', 'get_amount', 'status', 'modified_date',
                   'created_date']
 
 
@@ -111,7 +111,7 @@ class OrderPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'user', 'items', 'promo', 'location', 'file', 'get_amount', 'modified_date', 'created_date']
-        read_only_fields = ['user', 'items', 'get_amount']
+        read_only_fields = ['user', 'get_amount']
 
     def validate(self, attrs):
         user = self.context.get('request').user
@@ -149,4 +149,51 @@ class OrderPostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+        items = validated_data.pop('items', [])
+        order = super().create(validated_data)
+
+        # items_data ni to'ldirish
+        cart_items = CartItem.objects.filter(id__in=items)
+        if cart_items.count() != len(items):
+            order.delete()
+            raise ValidationError("Ba'zi itemlar mavjud emas yoki noto‘g‘ri ID berilgan.")
+
+        order.items_data = [
+            {
+                'id': item.id,
+                'product_name': item.product.name,
+                'quantity': item.quantity,
+                'price': str(item.get_amount),
+            } for item in cart_items
+        ]
+        order.save()
+
+        # items ni ManyToManyField ga qo'shish
+        for item in cart_items:
+            order.items.add(item)
+
+        return order
+
+    def update(self, instance, validated_data):
+        items = validated_data.pop('items', None)
+        instance = super().update(instance, validated_data)
+
+        if items:
+            cart_items = CartItem.objects.filter(id__in=items)
+            if cart_items.count() != len(items):
+                raise ValidationError("Ba'zi itemlar mavjud emas yoki noto‘g‘ri ID berilgan.")
+
+            instance.items_data = [
+                {
+                    'id': item.id,
+                    'product_name': item.product.name,
+                    'quantity': item.quantity,
+                    'price': str(item.get_amount),
+                } for item in cart_items
+            ]
+            instance.items.clear()  # Eski items ni o'chirish
+            for item in cart_items:
+                instance.items.add(item)  # Yangi items ni qo'shish
+            instance.save()
+
+        return instance

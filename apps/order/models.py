@@ -72,7 +72,6 @@ class Courier(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15)
 
-
     # Group tanlanadigan qilib ManyToOne (ya'ni ForeignKey)
     group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -94,6 +93,7 @@ class Courier(models.Model):
             if self.group:
                 self.user.groups.add(self.group)
 
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ('preparing', 'Tayyorlanmoqda'),
@@ -102,9 +102,11 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders_location')
+    location = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='orders_location')
     location_data = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)
     items = models.ManyToManyField(CartItem)
+    items_data = models.JSONField(encoder=DjangoJSONEncoder, null=True, blank=True)
     file = models.FileField(blank=True, null=True, upload_to="uploads/", validators=[validate_file_type])
     promo = models.CharField(max_length=8, null=True, blank=True)
     courier = models.ForeignKey(Courier, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
@@ -116,14 +118,19 @@ class Order(models.Model):
 
     @property
     def get_amount(self):
+        total = 0.0
+        if self.items_data and isinstance(self.items_data, list):
+            total = sum(float(item.get('price', 0)) for item in self.items_data)
+        elif self.items.exists():
+            total = sum(item.get_amount for item in self.items.all())
+
         if self.promo:
             try:
                 promo_object = Promo.objects.get(name=self.promo)
-                return float(
-                    sum(item.get_amount for item in self.items.all()) * (((100 - promo_object.discount) or 0) / 100))
+                return float(total * ((100 - promo_object.discount or 0) / 100))
             except Promo.DoesNotExist:
-                return sum(item.get_amount for item in self.items.all())
-        return round((sum(item.get_amount for item in self.items.all())), 2)
+                return round(total, 2)
+        return round(total, 2)
 
     def generate_pdf_receipt(self):
         if self.status == 'delivered':
@@ -131,13 +138,12 @@ class Order(models.Model):
                 'user': self.user.name,
                 'order_date': self.created_date.strftime("%Y-%m-%d %H:%M"),
                 'amount': str(self.get_amount),
-                'items': [
+                'items': self.items_data or [  # items_data dan foydalanamiz, agar bo'sh bo'lsa items dan olish mumkin
                     {
                         'name': item.product.name,
                         'quantity': item.quantity,
                         'price': str(item.get_amount)
-                    }
-                    for item in self.items.all()
+                    } for item in self.items.all()
                 ]
             }
             pdf_content = generate_receipt_pdf(order_data)

@@ -78,51 +78,37 @@ class OrderViewSet(CreateViewSetMixin, viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        print("Request data:", dict(request.data))  # Debug uchun
-
-        # `items` string yoki list sifatida kelishi mumkin, uni to'g'ri formatga keltiramiz
         items_raw = request.data.get("items", [])
-        if isinstance(items_raw, list):  # Agar list bo'lsa, birinchi elementini olish
+        if isinstance(items_raw, list):
             items_raw = items_raw[0] if items_raw else ""
 
         try:
             items_list = [int(i) for i in items_raw.split(",") if i.strip().isdigit()]
         except ValueError:
-            return Response({"error": "Noto‘g‘ri item ID berilgan."}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("Noto‘g‘ri item ID berilgan.")
 
-        print("Converted Items:", items_list)  # Debug uchun
-
-        # `items` yangilangan formatda serializerga uzatiladi
         data = request.data.copy()
-        data.setlist("items", [str(i) for i in items_list])  # Serializer list sifatida ishlashi uchun
-        data["user"] = request.user.id  # Faqatgina ID saqlanishi kerak
-        print("User ID:", data["user"])  # Debug uchun
+        data.setlist("items", [str(i) for i in items_list])
+        data["user"] = request.user.id
 
         serializer = self.get_serializer(data=data, context={'request': request})
         if serializer.is_valid():
             order = serializer.save()
 
-            # Orderning `items`larini `CartItem` orqali bog‘lash
+            # Mahsulot miqdorini kamaytirish
             cart_items = CartItem.objects.filter(id__in=items_list)
             if cart_items.count() != len(items_list):
-                return Response(
-                    {"error": "Ba'zi itemlar mavjud emas yoki noto‘g‘ri ID berilgan."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                order.delete()
+                raise ValidationError("Ba'zi itemlar mavjud emas yoki noto‘g‘ri ID berilgan.")
 
             for item in cart_items:
-                order.items.add(item)
-                product = item.product  # `CartItem` dan mahsulotni olish
-
-                # Mahsulot yetarlimi tekshirish
+                product = item.product
                 if item.quantity > product.quantity:
-                    return Response(
-                        {"error": f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
-                                  f"Qoldiq: {product.quantity} ta."},
-                        status=status.HTTP_400_BAD_REQUEST
+                    order.delete()
+                    raise ValidationError(
+                        f"{product.name} mahsulotidan yetarli miqdorda mavjud emas. "
+                        f"Qoldiq: {product.quantity} ta."
                     )
-
-                # Mahsulot miqdorini kamaytirish
                 product.quantity -= item.quantity
                 product.save()
 
