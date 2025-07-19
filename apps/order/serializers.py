@@ -161,7 +161,9 @@ class OrderPostSerializer(serializers.ModelSerializer):
         order.items_data = [
             {
                 'id': item.id,
+                'product_id': item.product.id,
                 'product_name': item.product.name,
+                'product_image': item.product.images.first().image.url if item.product.images.exists() else None,  # Birinchi rasm
                 'quantity': item.quantity,
                 'price': str(item.get_amount),
             } for item in cart_items
@@ -186,7 +188,10 @@ class OrderPostSerializer(serializers.ModelSerializer):
             instance.items_data = [
                 {
                     'id': item.id,
+                    'product_id': item.product.id,
                     'product_name': item.product.name,
+                    'product_image': item.product.images.first().image.url if item.product.images.exists() else None,
+                    # Birinchi rasm
                     'quantity': item.quantity,
                     'price': str(item.get_amount),
                 } for item in cart_items

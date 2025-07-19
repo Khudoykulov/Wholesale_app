@@ -140,7 +140,10 @@ class Order(models.Model):
                 'amount': str(self.get_amount),
                 'items': self.items_data or [  # items_data dan foydalanamiz, agar bo'sh bo'lsa items dan olish mumkin
                     {
+                        'product_id': item.product.id,
                         'name': item.product.name,
+                        'product_image': item.product.images.first().image.url if item.product.images.exists() else None,
+                        # Birinchi rasm
                         'quantity': item.quantity,
                         'price': str(item.get_amount)
                     } for item in self.items.all()
