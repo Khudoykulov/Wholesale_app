@@ -97,7 +97,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'location_data', 'file', 'items_data', 'promo', 'get_amount', 'status', 'modified_date',
+        fields = ['id', 'user', 'location_data', 'file', 'items_data', 'promo', 'get_amount', 'status', 'payment_confirmed', 'modified_date',
                   'created_date']
 
 

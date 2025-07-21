@@ -104,6 +104,19 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ['name', 'phone', 'avatar']
 
+class UserDeleteSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=128, required=True)
+
+    class Meta:
+        model = User
+        fields = ['password',]
+
+    def validate_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Noto'g'ri parol")
+        return value
+
 
 class NewBlockSerializer(serializers.ModelSerializer):
     class Meta:

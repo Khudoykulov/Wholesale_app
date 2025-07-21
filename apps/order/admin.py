@@ -7,6 +7,8 @@ from django.http import HttpResponse
 from django.db import transaction
 from django.utils.safestring import mark_safe
 import json
+from django.contrib.admin.widgets import AdminRadioSelect
+from django.db import models  # Bu qatorni qo'shing
 
 
 @admin.register(Promo)
@@ -36,14 +38,27 @@ class CartItemAdmin(admin.ModelAdmin):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'get_user_name', 'get_user_phone', 'status', 'courier', 'get_file_link', 'get_amount', 'location_address',
+        'id', 'get_user_name', 'get_user_phone', 'status', 'payment_confirmed', 'courier', 'get_file_link',
+        'get_amount', 'location_address',
         'created_date')
     list_display_links = ('id', 'get_user_name', 'get_amount',)
-    fields = ['get_user_name', 'get_user_phone', 'formatted_items', 'formatted_items_data', 'get_amount', 'status', 'courier',
-              'assigned_date', 'delivered_date', 'created_date', 'formatted_location_data']
+    fields = ['get_user_name', 'get_user_phone', 'formatted_items_data', 'get_amount', 'status',
+              'payment_confirmed',
+              'courier',
+              'created_date', 'formatted_location_data']
     date_hierarchy = 'created_date'
-    readonly_fields = ('get_amount','formatted_items', 'formatted_items_data', 'get_user_name', 'get_user_phone', 'assigned_date',
+    readonly_fields = ('get_amount', 'formatted_items', 'formatted_items_data', 'get_user_name', 'get_user_phone',
+                       'assigned_date',
                        'delivered_date', 'created_date', 'modified_date', 'formatted_location_data')
+
+    formfield_overrides = {
+        models.BooleanField: {'widget': AdminRadioSelect(choices=((True, 'Tastiqlash'), (False, 'Rad etish')))},
+    }
+
+    def payment_confirmed(self, obj):
+        return "Tulov holati"
+
+    payment_confirmed.short_description = "Tulov holati"  # O'zgartirildi
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

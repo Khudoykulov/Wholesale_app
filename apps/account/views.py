@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import SuperUserCreateSerializer, UserSerializer, UserUpdateSerializer, AdviceSerializer, \
-    BannerSerializer
+    BannerSerializer, UserDeleteSerializer
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
 )
@@ -123,6 +123,21 @@ class UserProfileAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=UserDeleteSerializer,
+        responses={status.HTTP_204_NO_CONTENT: "User successfully deleted"}
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = UserDeleteSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            request.user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

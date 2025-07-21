@@ -111,6 +111,7 @@ class Order(models.Model):
     promo = models.CharField(max_length=8, null=True, blank=True)
     courier = models.ForeignKey(Courier, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='preparing')
+    payment_confirmed = models.BooleanField(default=None, null=True, blank=True,)  # Yangi maydon
     assigned_date = models.DateTimeField(null=True, blank=True)
     delivered_date = models.DateTimeField(null=True, blank=True)
     modified_date = models.DateTimeField(auto_now_add=True)

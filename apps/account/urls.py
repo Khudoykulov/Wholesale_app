@@ -32,7 +32,7 @@ from .views import (
     AdviceViewSet,
     CallViewSet,
     BannerViewSet,
-    CartaViewSet
+    CartaViewSet, UserDeleteView
 )
 
 router = DefaultRouter()
@@ -45,6 +45,7 @@ router.register(r'carta', CartaViewSet)  # `/cartas/` API yo‘liga bog‘laymiz
 urlpatterns = [
     path('', include(router.urls)),
     path('profile/', UserProfileAPIView.as_view(), name='user-profile'),
+    path('profile/delete/', UserDeleteView.as_view(), name='user-delete'),
     path('register/', UserRegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('superuser/create/', SuperUserCreateView.as_view(), name='superuser-create'),
